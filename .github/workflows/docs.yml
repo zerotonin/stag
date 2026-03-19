@@ -1,0 +1,69 @@
+# Build Sphinx documentation and deploy to GitHub Pages
+#
+# Triggers on pushes to main and can be run manually.
+# Uses the modern GitHub Pages deployment via actions/deploy-pages.
+#
+# After first push you need to enable Pages in the repo:
+#   Settings → Pages → Source → "GitHub Actions"
+
+name: Deploy Documentation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - 'stag/**'
+      - '.github/workflows/docs.yml'
+      - 'pyproject.toml'
+  workflow_dispatch:  # allow manual trigger
+
+# Only one deployment at a time
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+# Permissions needed for Pages deployment
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[docs]"
+
+      - name: Build Sphinx documentation
+        run: |
+          cd docs
+          make html
+          touch _build/html/.nojekyll
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/_build/html
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
