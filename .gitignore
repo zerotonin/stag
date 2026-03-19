@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Jupyter notebooks
+.ipynb_checkpoints/
+
+# Data files (large binary data should not be committed)
+*.db
+*.h5
+*.hdf5
+*.npy
+*.npz
+
+# SLURM output
+slurm-*.out
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Sphinx build
+docs/_build/
+
+# Test / coverage
+.pytest_cache/
+htmlcov/
+.coverage

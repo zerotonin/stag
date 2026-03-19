@@ -1,0 +1,50 @@
+cff-version: 1.2.0
+title: >-
+  STAG — Sensor-based Tracking and Analysis of Gait
+message: >-
+  If you use this software, please cite both the software and the
+  accompanying journal article.
+type: software
+license: MIT
+repository-code: "https://github.com/zerotonin/stag"
+version: 0.1.0
+date-released: "2026-03-19"
+
+authors:
+  - given-names: Alexander R. H.
+    family-names: Matthews
+    affiliation: "Department of Zoology, University of Otago, Dunedin, New Zealand"
+  - given-names: Lindsay R.
+    family-names: Matthews
+    affiliation: "Matthews Research, New Zealand"
+  - given-names: Bart R. H.
+    family-names: Geurten
+    email: bart.geurten@otago.ac.nz
+    affiliation: "Department of Zoology, University of Otago, Dunedin, New Zealand"
+    orcid: "https://orcid.org/0000-0000-0000-0000"
+
+preferred-citation:
+  type: article
+  title: >-
+    Behavioural Phenotyping in Red Deer: Machine Learning Classification
+    of Accelerometer Data from Micro-Movements to Grazing
+  authors:
+    - given-names: Alexander R. H.
+      family-names: Matthews
+    - given-names: Lindsay R.
+      family-names: Matthews
+    - given-names: Bart R. H.
+      family-names: Geurten
+  journal: "Computers and Electronics in Agriculture"
+  year: 2026
+  # doi: "10.1016/j.compag.2026.XXXXXX"  # uncomment when assigned
+
+keywords:
+  - accelerometers
+  - behaviour classification
+  - hidden Markov model
+  - deer
+  - precision livestock farming
+  - unsupervised learning
+  - k-means clustering
+  - animal welfare

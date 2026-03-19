@@ -1,0 +1,41 @@
+# STAG conda environment
+#
+# Install:  conda env create -f environment.yml
+# Update:   conda env update -f environment.yml --prune
+# Activate: conda activate stag
+
+name: stag
+channels:
+  - rapidsai
+  - conda-forge
+  - defaults
+
+dependencies:
+  - python>=3.10
+  - ipython
+  - numpy>=1.24
+  - pandas>=2.0
+  - scipy>=1.10
+  - scikit-learn>=1.3
+  - matplotlib>=3.7
+  - seaborn>=0.12
+  - sqlalchemy>=2.0
+  - tqdm>=4.65
+  - pytables>=3.8
+  - pyproj>=3.5
+
+  # GPU clustering (comment out for CPU-only installs)
+  - cupy
+  - cuml
+
+  # Documentation
+  - sphinx>=7.0
+  - sphinx_rtd_theme>=2.0
+
+  # Development
+  - pytest>=7.0
+  - ruff
+
+  - pip
+  - pip:
+      - sphinx-autodoc-typehints>=1.23
