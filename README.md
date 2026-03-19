@@ -120,7 +120,7 @@ microcontrollers:
 | Arduino Micro | 4.3 × 10⁸ |
 | Intel i7-13700H (single core) | 2.6 × 10⁵ |
 
-## Citation
+<!-- ## Citation
 
 If you use STAG in your research, please cite:
 
@@ -134,7 +134,7 @@ If you use STAG in your research, please cite:
   journal = {Computers and Electronics in Agriculture},
   year    = {2026}
 }
-```
+``` -->
 
 See also [`CITATION.cff`](CITATION.cff) for machine-readable citation metadata.
 
