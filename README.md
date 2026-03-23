@@ -148,7 +148,7 @@ details.
 
 - **Alexander R. H. Matthews** — Department of Zoology, University of
   Otago, Dunedin, New Zealand
-- **Lindsay R. Matthews** — Matthews Research, New Zealand
+- **Lindsay R. Matthews** — Matthews Research International LP, New Zealand
 - **Bart R. H. Geurten** — Department of Zoology, University of Otago,
   Dunedin, New Zealand *(corresponding author: bart.geurten@otago.ac.nz)*
 
