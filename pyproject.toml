@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "stag"
-version = "0.1.0"
+version = "0.2.0"
 description = "Sensor-based Tracking and Analysis of Gait — unsupervised behaviour classification from wearable accelerometers."
 readme = "README.md"
 license = {text = "MIT"}
@@ -63,7 +63,7 @@ dev = [
 
 [project.urls]
 Repository = "https://github.com/zerotonin/stag"
-Documentation = "https://stag-pipeline.readthedocs.io"
+Documentation = "https://zerotonin.github.io/stag/"
 
 [tool.setuptools.packages.find]
 include = ["stag*"]
@@ -77,7 +77,7 @@ select = ["E", "F", "I", "W", "D"]
 ignore = ["D100", "D104"]
 
 [tool.ruff.lint.pydocstyle]
-convention = "numpy"
+convention = "google"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
