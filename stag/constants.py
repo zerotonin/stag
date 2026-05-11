@@ -200,6 +200,50 @@ FIGURES_SUBDIR: str = "figures"
 TABLES_SUBDIR: str = "tables"
 
 
+# ┌────────────────────────────────────────────────────────────┐
+# │ Canonical data paths  « DINZ deer-2024 archive »           │
+# └────────────────────────────────────────────────────────────┘
+#
+# See [[Data Files — Source of Truth]] in the DINZ Obsidian folder
+# for the full file map (what is canonical, derived, legacy, or
+# corrupt).  The paths below are the ones analysis scripts default
+# to; pass --meta-dir / --data-file on the CLI to override.
+
+HCS_SOURCE_DIR: Path = Path("/mnt/hcs/DINZ_deer_post_velvetting_2024/deer_2024")
+"""Read-only network archive of the 2024 deer dataset (3.0 TB).
+Too slow for direct analysis — mirror the curated subset locally
+via ``~/PyProjects/copy_deer_data_to_local.sh``."""
+
+LOCAL_DATA_DIR: Path = Path("/media/geuba03p/DATADRIVE1/deer_2024")
+"""Local working copy on the NVMe data drive.  Tier-1 footprint
+≈ 43 GB.  All path constants below are anchored here."""
+
+RAW_CLUSTERING_INPUT: Path = LOCAL_DATA_DIR / "clust_data_raw_20240412.npy"
+"""Raw 8-column input the SLURM clustering actually read.
+Shape ``(204_554_618, 8)`` float64.  Columns 0–5 are the six
+accelerometer axes; columns 6–7 are GPS-derived speed and
+tortuosity (excluded from clustering)."""
+
+ZSCORED_CLUSTERING_INPUT: Path = LOCAL_DATA_DIR / "clust_data_zscored_6col.npy"
+"""Six-column z-scored feature matrix derived from
+:data:`RAW_CLUSTERING_INPUT` by
+``scripts/preprocess_clustering_data.py``.  Shape
+``(204_554_618, 6)`` float64.  This is the file every internal-
+and external-validation analysis consumes."""
+
+ZSCORED_MUSIGMA_CSV: Path = LOCAL_DATA_DIR / "clust_data_zscored_6col.musigma.csv"
+"""Per-column mu and sigma used to produce
+:data:`ZSCORED_CLUSTERING_INPUT`.  Written alongside the .npy
+by the preprocess script; replaces the corrupted
+``clust_data_muSigma_20240412.csv``."""
+
+CLUSTER_RESULTS_DIR: Path = LOCAL_DATA_DIR / "cluster_results" / "deer6raw"
+"""Root of the per-fit metadata + centroids + labels tree
+produced by the Aoraki SLURM sweep.  Per-fit JSONs and centroid
+arrays are present in full; labels are present for the 24
+representative runs only."""
+
+
 def save_figure(
     fig: "Figure",
     stem: str,
