@@ -1,18 +1,33 @@
 # ╔══════════════════════════════════════════════════════════════════╗
 # ║  STAG — clustering.plotting                                      ║
-# ║  « centroid radar + quality / instability panels »               ║
+# ║  « per-centroid dashboards and internal-metric figures »         ║
 # ╠══════════════════════════════════════════════════════════════════╣
-# ║  Plot helpers for the Calinski-Harabasz, instability,            ║
-# ║  and centroid-profile figures.  Imported by run scripts,         ║
-# ║  not used inside the library itself.                             ║
+# ║  CentroidDashboard renders the per-PM radar + pie + bar panel   ║
+# ║  used in Figure 3 of the manuscript.                            ║
+# ║                                                                  ║
+# ║  Free functions below produce the internal-metric figures       ║
+# ║  (Calinski–Harabasz, Silhouette, Inertia/Kneedle, stability)    ║
+# ║  that make up the revised Figure 2.                              ║
+# ║                                                                  ║
+# ║  Cross-run lineplots that aggregate over the meta-analysis      ║
+# ║  DataFrame live in clustering.meta_analysis.ClusterPlotter.     ║
 # ╚══════════════════════════════════════════════════════════════════╝
-"""Radar-chart and heatmap visualisation of cluster centroids."""
+"""Per-centroid dashboards and internal-metric figures."""
+
+from __future__ import annotations
+
+import json
+from typing import TYPE_CHECKING
 
 import matplotlib.pyplot as plt
 import numpy as np
-import json
 
-class ClusterPlotter:
+from stag.constants import WONG, apply_figure_defaults
+
+if TYPE_CHECKING:
+    import pandas as pd
+
+class CentroidDashboard:
     def __init__(self, centroids_info_path):
         """Load centroids information and additional metrics from a JSON file."""
         with open(centroids_info_path, 'r') as file:
@@ -74,6 +89,142 @@ class ClusterPlotter:
         self._plot_bar_plots(ax, centroid_info)
         self._plot_duration_text(ax, centroid_info)
 
+# ┌────────────────────────────────────────────────────────────┐
+# │ Internal-metric figures  « Figure 2 of the revision »      │
+# └────────────────────────────────────────────────────────────┘
+
+
+def plot_internal_metrics_panel(
+    summary: "pd.DataFrame",
+    elbow_k: int | None = None,
+    chosen_k: int | None = 8,
+    figsize: tuple[float, float] = (9.0, 7.2),
+) -> plt.Figure:
+    """Four-panel internal-metric figure for the revised Figure 2.
+
+    Panels:
+      (A) Calinski–Harabasz index vs k.
+      (B) Instability (Hungarian-matched centroid drift) vs k.
+      (C) Mean stratified Silhouette vs k.
+      (D) Inertia W(k) vs k with the Kneedle elbow marked.
+
+    Args:
+        summary:  Per-k DataFrame from
+                  :func:`stag.clustering.internal_metrics.selection_summary`.
+                  Columns: ``k``, ``calinski_harabasz``, ``instability``,
+                  ``silhouette``, ``inertia``.
+        elbow_k:  k flagged by the Kneedle algorithm (drawn as a marker
+                  on panel D).  None to suppress.
+        chosen_k: k highlighted across all panels as the manuscript's
+                  selected solution.  Default 8.
+        figsize:  Figure size in inches.
+
+    Returns:
+        The figure handle (caller saves via
+        :func:`stag.constants.save_figure`).
+    """
+    apply_figure_defaults()
+
+    fig, axes = plt.subplots(2, 2, figsize=figsize, sharex=True)
+    ax_ch, ax_inst, ax_sil, ax_W = axes.flatten()
+
+    k = summary["k"].to_numpy()
+    line_colour = WONG["blue"]
+    chosen_colour = WONG["vermilion"]
+    elbow_colour = WONG["orange"]
+
+    def _band(name: str):
+        """Return (low, high) columns for ``name`` if present, else None."""
+        lo, hi = f"{name}_low", f"{name}_high"
+        if lo in summary.columns and hi in summary.columns:
+            return summary[lo], summary[hi]
+        return None, None
+
+    _plot_metric(ax_ch, k, summary["calinski_harabasz"],
+                 *_band("calinski_harabasz"),
+                 label="Calinski–Harabasz", colour=line_colour)
+    ax_ch.set_title("(A) Quality")
+    ax_ch.set_ylabel("CH index (higher is better)")
+
+    _plot_metric(ax_inst, k, summary["instability"],
+                 *_band("instability"),
+                 label="Instability", colour=line_colour)
+    ax_inst.set_title("(B) Stability")
+    ax_inst.set_ylabel("Hungarian-matched drift\n(lower is better)")
+
+    _plot_metric(ax_sil, k, summary["silhouette"],
+                 *_band("silhouette"),
+                 label="Silhouette", colour=line_colour)
+    ax_sil.set_title("(C) Silhouette")
+    ax_sil.set_ylabel("Mean silhouette ($\\bar{s}$)")
+    ax_sil.set_xlabel("k")
+
+    _plot_metric(ax_W, k, summary["inertia"],
+                 *_band("inertia"),
+                 label="Inertia", colour=line_colour)
+    ax_W.set_title("(D) Inertia / Elbow")
+    ax_W.set_ylabel("$W(k)$")
+    ax_W.set_xlabel("k")
+
+    if elbow_k is not None and elbow_k in k:
+        y_at_elbow = summary.loc[summary["k"] == elbow_k, "inertia"].iloc[0]
+        ax_W.scatter(
+            [elbow_k], [y_at_elbow],
+            s=80, color=elbow_colour, zorder=5,
+            label=f"Kneedle elbow (k = {elbow_k})",
+        )
+        ax_W.legend(loc="upper right", frameon=False, fontsize="small")
+
+    if chosen_k is not None:
+        for ax in (ax_ch, ax_inst, ax_sil, ax_W):
+            ax.axvline(chosen_k, color=chosen_colour, linestyle="--",
+                       linewidth=1.0, alpha=0.7)
+
+    # Show ticks at the actual k values (which are non-uniformly
+    # spaced past k=20: 2..20 step 1, then 25, 30, 35, 40, 45, 50).
+    # The earlier `k[::2]` heuristic was visually confusing because
+    # it skipped 25, 35, 45 while keeping 30, 40, 50.  Now: tick at
+    # every k; minor ticks suppressed; labels rotated when crowded.
+    for ax in (ax_ch, ax_inst, ax_sil, ax_W):
+        ax.set_xticks(k)
+        ax.set_xticks([], minor=True)
+        if len(k) > 15:
+            ax.tick_params(axis="x", labelsize="x-small", rotation=45)
+
+    fig.tight_layout()
+    return fig
+
+
+def _plot_metric(
+    ax, x, y, low=None, high=None,
+    *, label: str, colour: str,
+) -> None:
+    """Single-panel helper — median line + 95 % CI shading + markers.
+
+    ``low`` and ``high`` are optional 1-D sequences of the same length
+    as ``y``.  When both are provided, the panel renders a translucent
+    fill between them; otherwise just the median line.
+    """
+    x_arr = np.asarray(x)
+    y_arr = np.asarray(y, dtype=float)
+    finite = np.isfinite(y_arr)
+
+    if low is not None and high is not None:
+        low_arr = np.asarray(low, dtype=float)
+        high_arr = np.asarray(high, dtype=float)
+        band_good = finite & np.isfinite(low_arr) & np.isfinite(high_arr)
+        if band_good.any():
+            ax.fill_between(
+                x_arr[band_good], low_arr[band_good], high_arr[band_good],
+                color=colour, alpha=0.18, linewidth=0,
+                label=f"{label} 95 % CI",
+            )
+
+    ax.plot(x_arr[finite], y_arr[finite],
+            color=colour, marker="o", markersize=4, linewidth=1.5,
+            label=label)
+
+
 if __name__ == "__main__":
-    plotter = ClusterPlotter("/home/geuba03p/deer_cluster/centroid_label_info.json")
+    plotter = CentroidDashboard("/home/geuba03p/deer_cluster/centroid_label_info.json")
     plotter.plot_radar_and_metrics("nmax")
