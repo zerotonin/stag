@@ -1,10 +1,11 @@
-"""
-Utility functions for accelerometer data preprocessing.
-
-Helper functions used during sensor synchronisation, including
-z-score calibration, absolute-value transforms, column summation,
-and consecutive-difference computation.
-"""
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║  STAG — sync.utils                                               ║
+# ║  « helpers for drop-event detection »                            ║
+# ╠══════════════════════════════════════════════════════════════════╣
+# ║  Peak-finding and clock-drift utilities used by the              ║
+# ║  BetterDataSync pipeline.  Not intended for direct use.          ║
+# ╚══════════════════════════════════════════════════════════════════╝
+"""Helpers for synchronisation drop-event detection."""
 
 import pandas as pd
 

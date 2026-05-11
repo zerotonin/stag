@@ -1,10 +1,12 @@
-"""
-Feature-level statistics for z-scoring.
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║  STAG — analysis.preprocessing                                   ║
+# ║  « low-pass filter + z-score features »                          ║
+# ╠══════════════════════════════════════════════════════════════════╣
+# ║  Applies the 20 Hz Butterworth low-pass filter and the           ║
+# ║  per-axis z-score described in Section 2.2.                      ║
+# ╚══════════════════════════════════════════════════════════════════╝
+"""Feature-level low-pass filter and z-scoring."""
 
-Computes per-column mean (mu) and standard deviation (sigma) from a
-``.npy`` feature matrix and saves them to CSV for use in standardisation
-and de-standardisation of cluster centroids.
-"""
 import numpy as np
 import pandas as pd
 

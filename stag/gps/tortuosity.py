@@ -1,9 +1,12 @@
-"""
-Tortuosity and speed from raw GPS latitude/longitude.
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║  STAG — gps.tortuosity                                           ║
+# ║  « arc-chord path-tortuosity measure »                           ║
+# ╠══════════════════════════════════════════════════════════════════╣
+# ║  Tortuosity tau = (sum of two step lengths) / chord,             ║
+# ║  as defined in Eq. 2 of the manuscript.  Pure NumPy.             ║
+# ╚══════════════════════════════════════════════════════════════════╝
+"""Arc-chord path-tortuosity measure."""
 
-Haversine-based distance calculation between consecutive GPS fixes,
-yielding arc-chord tortuosity ratios and absolute ground speed.
-"""
 import pandas as pd
 import math
 import numpy as np

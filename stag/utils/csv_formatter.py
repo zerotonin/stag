@@ -1,9 +1,11 @@
-"""
-CSV-formatted log handler for Python logging.
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║  STAG — utils.csv_formatter                                      ║
+# ║  « small CSV pretty-printing helpers »                           ║
+# ╠══════════════════════════════════════════════════════════════════╣
+# ║  Tiny helpers for one-off CSV exports inside scripts.            ║
+# ╚══════════════════════════════════════════════════════════════════╝
+"""CSV-formatted log handler for Python logging."""
 
-Provides :class:`CsvFormatter`, a logging formatter that writes each
-log record as a quoted CSV row (level, message).
-"""
 import logging
 import csv
 import io

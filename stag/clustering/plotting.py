@@ -1,9 +1,13 @@
-"""
-Radar-chart and heatmap visualisation of cluster centroids.
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║  STAG — clustering.plotting                                      ║
+# ║  « centroid radar + quality / instability panels »               ║
+# ╠══════════════════════════════════════════════════════════════════╣
+# ║  Plot helpers for the Calinski-Harabasz, instability,            ║
+# ║  and centroid-profile figures.  Imported by run scripts,         ║
+# ║  not used inside the library itself.                             ║
+# ╚══════════════════════════════════════════════════════════════════╝
+"""Radar-chart and heatmap visualisation of cluster centroids."""
 
-Provides :class:`ClusterPlotter` for generating per-centroid radar
-charts from a JSON centroids file.
-"""
 import matplotlib.pyplot as plt
 import numpy as np
 import json
@@ -70,6 +74,6 @@ class ClusterPlotter:
         self._plot_bar_plots(ax, centroid_info)
         self._plot_duration_text(ax, centroid_info)
 
-# Usage
-plotter = ClusterPlotter('/home/geuba03p/deer_cluster/centroid_label_info.json')
-plotter.plot_radar_and_metrics('nmax')
+if __name__ == "__main__":
+    plotter = ClusterPlotter("/home/geuba03p/deer_cluster/centroid_label_info.json")
+    plotter.plot_radar_and_metrics("nmax")

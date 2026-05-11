@@ -1,19 +1,13 @@
-"""
-Behavioural sequence analysis from cluster label time series.
-
-This module implements the :class:`LabelAnalyser`, which takes the
-per-time-step cluster assignments produced by the k-means stage and
-computes:
-
-- Percentage prevalence of each prototypical movement.
-- Bout durations (mean ± SEM) for contiguous runs of the same label.
-- A first-order transition matrix (the basis for HMM super-prototypes).
-- Short-sequence filtering to merge spurious single-frame labels into
-  adjacent bouts (after Braun & Geurten, 2010).
-
-Results are saved as a single JSON file for downstream plotting and
-circadian analysis.
-"""
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║  STAG — analysis.label_analysis                                  ║
+# ║  « prevalence, bouts, and transitions »                          ║
+# ╠══════════════════════════════════════════════════════════════════╣
+# ║  LabelAnalyser converts a per-time-step cluster                  ║
+# ║  assignment into prevalence, bout durations, and a               ║
+# ║  first-order Markov transition matrix.  Outputs feed             ║
+# ║  the super-prototype analysis and figures 3-4.                   ║
+# ╚══════════════════════════════════════════════════════════════════╝
+"""Prevalence, bout, and Markov-transition analysis from cluster labels."""
 
 import json
 

@@ -1,9 +1,12 @@
-"""
-NaN detection and linear interpolation for sensor data.
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║  STAG — analysis.nan_handler                                     ║
+# ║  « interpolate or drop NaN gaps »                                ║
+# ╠══════════════════════════════════════════════════════════════════╣
+# ║  Utility for repairing the feature matrix prior to               ║
+# ║  clustering.  See the docstring for the gap-size cutoff.         ║
+# ╚══════════════════════════════════════════════════════════════════╝
+"""NaN detection and linear interpolation for sensor data."""
 
-Utility functions for locating contiguous NaN sequences in numpy arrays
-and filling them via linear interpolation.
-"""
 import numpy as np
 import pandas as pd
 

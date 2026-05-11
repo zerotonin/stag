@@ -1,10 +1,12 @@
-"""
-Standardised output path generation for clustering results.
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║  STAG — utils.filename_generator                                 ║
+# ║  « standardised output paths for clustering »                    ║
+# ╠══════════════════════════════════════════════════════════════════╣
+# ║  Generates the centroid / labels / meta filename triplet         ║
+# ║  used by every clustering and meta-analysis script.              ║
+# ╚══════════════════════════════════════════════════════════════════╝
+"""Standardised output path generation for clustering results."""
 
-Generates a directory hierarchy and filenames for centroids, labels,
-and metadata JSON files based on experiment tag, k, deletion size,
-and deletion position.
-"""
 # generate_filename.py
 import os
 import sys

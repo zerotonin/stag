@@ -1,11 +1,12 @@
-"""
-Sensor data synchronisation for head and ear accelerometers.
-
-This module provides the :class:`BetterDataSync` class, which aligns
-tri-axial accelerometer streams recorded on the head and ear of a deer
-by detecting calibration-drop events (three controlled 1.5 m drops
-recorded simultaneously by both loggers).
-"""
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║  STAG — sync.data_sync                                           ║
+# ║  « align head and ear streams via calibration drops »            ║
+# ╠══════════════════════════════════════════════════════════════════╣
+# ║  BetterDataSync aligns the head- and ear-mounted                 ║
+# ║  accelerometer streams by locating shared calibration            ║
+# ║  drop events and re-sampling to the common timeline.             ║
+# ╚══════════════════════════════════════════════════════════════════╝
+"""Synchronise head and ear accelerometers via shared calibration drops."""
 
 import logging
 import os

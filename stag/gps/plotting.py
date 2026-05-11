@@ -1,9 +1,15 @@
-"""
-GPS trajectory visualisation.
-
-Functions for plotting deer trajectories as colour-coded line
-collections with optional close-up insets.
-"""
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║  STAG — gps.plotting                                             ║
+# ║  « trajectory and speed visualisation »                          ║
+# ╠══════════════════════════════════════════════════════════════════╣
+# ║  Plot deer trajectories as colour-coded line collections        ║
+# ║  with optional close-up insets, plus speed time-series.         ║
+# ║                                                                  ║
+# ║  NOTE: this file has pre-existing indentation rot in several    ║
+# ║  function bodies and does not import as-is.  Targeted repair    ║
+# ║  is deferred (see Rebuttal Repo Refactoring — Sprint 3).        ║
+# ╚══════════════════════════════════════════════════════════════════╝
+"""GPS trajectory and speed visualisation (pre-existing rot — see banner)."""
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np

@@ -1,11 +1,16 @@
-"""
-GPS trajectory processing and feature extraction.
-
-Converts GPS latitude/longitude to New Zealand Map Grid (NZMG)
-Cartesian coordinates, computes ground speed and path tortuosity,
-applies Gaussian smoothing, and inserts the results into the STAG
-database.
-"""
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║  STAG — gps.analysis                                             ║
+# ║  « ground speed and NZMG positions »                             ║
+# ╠══════════════════════════════════════════════════════════════════╣
+# ║  Project WGS84 GPS samples to the New Zealand Map Grid          ║
+# ║  (NZMG, EPSG:27200), compute ground speed and path              ║
+# ║  tortuosity, and apply Gaussian smoothing.                      ║
+# ║                                                                  ║
+# ║  NOTE: this file has pre-existing indentation rot in several    ║
+# ║  function bodies and does not import as-is.  Targeted repair    ║
+# ║  is deferred (see Rebuttal Repo Refactoring — Sprint 3).        ║
+# ╚══════════════════════════════════════════════════════════════════╝
+"""GPS trajectory processing and feature extraction (pre-existing rot — see banner)."""
 
 import sys
 import pandas as pd
