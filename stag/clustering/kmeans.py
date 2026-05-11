@@ -1,24 +1,12 @@
-"""
-GPU-accelerated k-means clustering with contiguous leave-out stability.
-
-This module implements the core clustering stage of the STAG pipeline.
-It partitions z-scored accelerometer feature vectors into *k* prototypical
-movements using RAPIDS cuML *k*-means on GPU, evaluates cluster quality
-via the Calinski--Harabasz index, and supports a contiguous leave-out
-scheme for robustness analysis.
-
-The script is designed for SLURM array-job submission: all parameters
-(k, deletion size, deletion position, random state) are accepted as
-command-line arguments.
-
-Example
--------
-.. code-block:: bash
-
-    python -m stag.clustering.kmeans \\
-        -t deer8 -nc 8 -ds 0 -dp 0 -rs 0 \\
-        -df data/clust_data.npy -sd results/
-"""
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║  STAG — clustering.kmeans                                        ║
+# ║  « GPU k-means with contiguous leave-out »                       ║
+# ╠══════════════════════════════════════════════════════════════════╣
+# ║  RAPIDS cuML k-means with the contiguous-leave-out               ║
+# ║  protocol from Section 2.3 of the manuscript.  Designed          ║
+# ║  for SLURM array submission on the Aoraki HPC cluster.           ║
+# ╚══════════════════════════════════════════════════════════════════╝
+"""GPU-accelerated k-means clustering with contiguous leave-out stability."""
 
 import argparse
 import datetime
@@ -114,36 +102,30 @@ def generate_filename(parent_dir, tag, num_clusters, deletion_size, deletion_pos
 
 
 def save_output(
-    centroids, labels, quality_score, data_file, reduction_percent,
+    centroids, labels, quality_score, inertia, data_file, reduction_percent,
     cut_position_percent, filenames, start_time, duration,
 ):
     """Persist clustering results (centroids, labels, metadata JSON).
 
-    Parameters
-    ----------
-    centroids : numpy.ndarray
-        Cluster centroids, shape ``(k, n_features)``.
-    labels : numpy.ndarray
-        Per-sample cluster assignments.
-    quality_score : float
-        Calinski--Harabasz index.
-    data_file : str
-        Path to the input data file.
-    reduction_percent : float
-        Deletion size used.
-    cut_position_percent : float
-        Deletion position used.
-    filenames : dict
-        Output paths from :func:`generate_filename`.
-    start_time : datetime.datetime
-        Analysis start timestamp.
-    duration : datetime.timedelta
-        Wall-clock duration of the analysis.
+    Args:
+        centroids:            Cluster centroids, shape ``(k, n_features)``.
+        labels:               Per-sample cluster assignments.
+        quality_score:        Calinski--Harabasz index.
+        inertia:              Within-cluster sum of squared distances
+                              (``W(k)`` — the k-means objective). Required
+                              for the Elbow / Kneedle internal metric.
+        data_file:            Path to the input data file.
+        reduction_percent:    Deletion size used.
+        cut_position_percent: Deletion position used.
+        filenames:            Output paths from :func:`generate_filename`.
+        start_time:           Analysis start timestamp.
+        duration:             Wall-clock duration of the analysis.
     """
     np.save(filenames["centroids"], centroids)
     np.save(filenames["labels"], labels)
     metadata = {
         "calinski_harabasz_score": quality_score,
+        "inertia": float(inertia) if inertia is not None else None,
         "data_file": data_file,
         "reduction_percent": reduction_percent,
         "cut_position_percent": cut_position_percent,
@@ -226,13 +208,14 @@ def main(tag, n_clusters, deletion_size, deletion_position, random_state, data_f
     centroids = kmeans.cluster_centers_.get()
 
     quality_score = get_quality(labels, data_gpu_scaled)
+    inertia = float(kmeans.inertia_) if hasattr(kmeans, "inertia_") else None
     duration = datetime.datetime.now() - start_time
 
     save_output(
-        centroids, labels, quality_score, data_file,
+        centroids, labels, quality_score, inertia, data_file,
         deletion_size, deletion_position, filenames, start_time, duration,
     )
-    print(f"Done — CH = {quality_score:.1f}, duration = {duration}")
+    print(f"Done — CH = {quality_score:.1f}, inertia = {inertia}, duration = {duration}")
 
 
 if __name__ == "__main__":
