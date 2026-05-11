@@ -9,8 +9,8 @@ An unsupervised machine-learning pipeline for classifying farmed red deer
 
 STAG discovers prototypical movement patterns directly from sensor streams
 using *k*-means clustering, chains them into higher-order behavioural
-sequences via a Hidden Markov Model, and runs on a 16 MHz microcontroller
-at over 4 × 10⁸ classifications per second.
+sequences via a first-order Markov transition model, and runs on a 16 MHz
+microcontroller at over 4 × 10⁸ classifications per second.
 
 .. toctree::
    :maxdepth: 2

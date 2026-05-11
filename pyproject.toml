@@ -17,7 +17,7 @@ authors = [
 keywords = [
     "accelerometer",
     "behaviour-classification",
-    "hidden-markov-model",
+    "markov-transition-model",
     "deer",
     "precision-livestock-farming",
     "unsupervised-learning",

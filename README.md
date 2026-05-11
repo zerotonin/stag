@@ -10,9 +10,9 @@ An unsupervised machine-learning pipeline for classifying farmed red deer
 
 STAG discovers prototypical movement patterns directly from sensor streams
 using *k*-means clustering, chains them into higher-order behavioural
-sequences via a Hidden Markov Model, and runs on a 16 MHz microcontroller
-at over 4 × 10⁸ classifications per second — no GPU, cloud link, or
-labelled training data required at inference time.
+sequences via a first-order Markov transition model, and runs on a 16 MHz
+microcontroller at over 4 × 10⁸ classifications per second — no GPU,
+cloud link, or labelled training data required at inference time.
 
 ---
 
@@ -24,7 +24,7 @@ labelled training data required at inference time.
 | 2 | `stag.database` | Ingest synchronised `.h5` files into a SQLite database (SQLAlchemy ORM) |
 | 3 | `stag.gps` | Compute ground speed and path tortuosity from GPS fixes (NZMG projection) |
 | 4 | `stag.clustering` | GPU-accelerated *k*-means with contiguous leave-out stability analysis |
-| 5 | `stag.analysis` | Transition matrices, bout statistics, and HMM super-prototypes |
+| 5 | `stag.analysis` | Transition matrices, bout statistics, and Markov super-prototypes |
 
 ## Repository structure
 
@@ -35,7 +35,7 @@ stag/
 │   ├── database/           # SQLAlchemy ORM & database construction
 │   ├── gps/                # GPS trajectory analysis & plotting
 │   ├── clustering/         # k-means clustering & meta-analysis
-│   ├── analysis/           # Label analysis, HMM, preprocessing
+│   ├── analysis/           # Label analysis, Markov transitions, preprocessing
 │   └── utils/              # Logging, filename generation, helpers
 ├── scripts/                # Runnable entry-point scripts
 ├── slurm/                  # HPC job submission scripts (NeSI / Aoraki)

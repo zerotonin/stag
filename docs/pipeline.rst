@@ -66,8 +66,8 @@ The eight prototypical movements (PM₀–PM₇) fall into three categories:
 - **Ear flicks** (PM₂, PM₄, PM₅) — rapid ear movements in response to
   irritants (e.g. flies), each < 1 s.
 
-Hidden Markov Model
--------------------
+Markov transition analysis
+--------------------------
 
 The prototype label sequence is modelled as a first-order Markov chain.
 **Super-prototypes** are frequent triplets of successive labels exceeding

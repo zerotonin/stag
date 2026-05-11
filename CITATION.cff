@@ -42,7 +42,7 @@ preferred-citation:
 keywords:
   - accelerometers
   - behaviour classification
-  - hidden Markov model
+  - Markov transition model
   - deer
   - precision livestock farming
   - unsupervised learning
