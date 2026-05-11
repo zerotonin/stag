@@ -14,6 +14,8 @@ import json
 import numpy as np
 from tqdm import tqdm
 
+from stag.analysis.markov import build_transition_matrix
+
 
 class LabelAnalyser:
     """Analyse cluster labels for behavioural statistics and transitions.
@@ -134,16 +136,18 @@ class LabelAnalyser:
     def get_transitions(self):
         """Build the first-order transition matrix.
 
+        Thin delegate around :func:`stag.analysis.markov.build_transition_matrix`
+        — the canonical Markov-transition helper.  Returned for backward
+        compatibility with the LabelAnalyser API; new code should call
+        the free function directly.
+
         Returns
         -------
         numpy.ndarray
             Square matrix of shape ``(cen_num, cen_num)`` where entry
             ``(i, j)`` counts transitions from label *i* to label *j*.
         """
-        transitions = np.zeros((self.cen_num, self.cen_num))
-        for i in tqdm(range(len(self.IDX) - 1), desc="transitions"):
-            transitions[self.IDX[i], self.IDX[i + 1]] += 1
-        return transitions
+        return build_transition_matrix(self.IDX, n_states=self.cen_num)
 
     def save_results_to_json(self, file_path, durations, percentages, transitions):
         """Write analysis results to a JSON file.
