@@ -23,6 +23,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from scipy.optimize import linear_sum_assignment
+from tqdm import tqdm
 
 
 class ClusterMetaAnalysis:
@@ -60,12 +61,20 @@ class ClusterMetaAnalysis:
             for fname in files:
                 if not fname.endswith(".json"):
                     continue
+                # Skip enriched centroid_label_info-style JSONs that
+                # share the tree but have a dict-per-centroid schema.
+                if "_meta_k" not in fname:
+                    continue
+
                 file_path = os.path.join(root, fname)
                 try:
                     with open(file_path, "r") as f:
                         content = json.load(f)
                 except (OSError, json.JSONDecodeError) as e:
                     print(f"file not loadable: {file_path} ({e})")
+                    continue
+
+                if "reduction_percent" not in content or "centroids" not in content:
                     continue
 
                 content["k_number"] = len(content["centroids"])
@@ -146,7 +155,10 @@ class ClusterMetaAnalysis:
 
         groups = self.df[["k_number", "reduction_percent"]].drop_duplicates()
 
-        for _, row in groups.iterrows():
+        for _, row in tqdm(
+            groups.iterrows(), total=len(groups),
+            desc="Hungarian instability (k × reduction_percent groups)",
+        ):
             k_number = row["k_number"]
             reduction_percent = row["reduction_percent"]
             centroids_list = self.load_centroids_for_analysis(reduction_percent, k_number)

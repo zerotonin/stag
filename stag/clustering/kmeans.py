@@ -50,6 +50,13 @@ def shrink_data(data, reduction_percent, cut_position_percent):
     numpy.ndarray
         Reduced feature matrix.
     """
+    # Fast path: 0 % deletion is a no-op.  Skipping np.delete here
+    # avoids materialising a 13 GB copy of the feature matrix per worker
+    # during parallel inertia back-fill — exactly the bomb that OOM'd
+    # the 24-worker run on 62 GB RAM.
+    if reduction_percent == 0:
+        return data
+
     total_size = len(data)
     cut_size = int(total_size * (reduction_percent / 100.0))
     cut_start = int(total_size * (cut_position_percent / 100.0))
