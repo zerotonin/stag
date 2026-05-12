@@ -1,23 +1,34 @@
 #!/usr/bin/env python
 # ╔══════════════════════════════════════════════════════════════════╗
 # ║  STAG — scripts.preprocess_clustering_data                       ║
-# ║  « reproduce the z-scored 6-column feature matrix »              ║
+# ║  « reproduce the 2024 SLURM pipeline's normalisation »           ║
 # ╠══════════════════════════════════════════════════════════════════╣
-# ║  The SLURM clustering on Aoraki used six accelerometer axes      ║
-# ║  (Head_{X,Y,Z} + Ear_{X,Y,Z}) — GPS speed and tortuosity were    ║
-# ║  excluded because the 0.5 Hz GPS sampling rate could not resolve ║
-# ║  fine head/ear motion.  The raw .npy archive still contains      ║
-# ║  eight columns, so we slice + z-score here in one streaming      ║
-# ║  pass and write the result back as a fresh .npy.  Downstream     ║
-# ║  silhouette / inertia code then sees a clean array that lines    ║
-# ║  up exactly with the saved 6-D centroids and labels.             ║
+# ║  The production SLURM clustering in 2024 (Aoraki                ║
+# ║  clustering_script.py) performed three preprocessing steps      ║
+# ║  inside the per-job script itself:                              ║
 # ║                                                                  ║
-# ║  Streaming: two passes over the raw file with Welford-style      ║
-# ║  online statistics, never materialising more than a chunk of     ║
-# ║  rows at a time, so the workstation's 62 GB RAM is never a       ║
-# ║  bottleneck.                                                     ║
+# ║    1. Slice the 8-column raw feature matrix to the first 6      ║
+# ║       columns (the accelerometer axes; GPS speed and tortuosity ║
+# ║       were dropped per manuscript §2.2).                         ║
+# ║    2. Clip column 5 (Ear_Z) to ±7.99 — works around an           ║
+# ║       ingestion bug that produced nine astronomically large     ║
+# ║       outliers in that column only.                              ║
+# ║    3. Apply cuML's MaxAbsScaler — divide each column by its     ║
+# ║       absolute maximum, mapping the data to [-1, 1] per         ║
+# ║       column.  Crucially, NOT StandardScaler: the historical    ║
+# ║       script's StandardScaler line is commented out, and using  ║
+# ║       it produces centroids in a completely different scale     ║
+# ║       (column-5's small σ ≈ 0.39 would stretch the data to     ║
+# ║       ±20+, breaking the partition geometry).                   ║
+# ║                                                                  ║
+# ║  This script bakes all three steps into a single .npy that     ║
+# ║  downstream tooling can consume directly: feed it to            ║
+# ║  `stag.clustering.kmeans --no-rescale` and the cuML KMeans      ║
+# ║  fit reproduces the 2024 centroids bit-for-bit (modulo GPU      ║
+# ║  non-determinism in the few percent of high-k positions that   ║
+# ║  sit near degenerate local optima).                             ║
 # ╚══════════════════════════════════════════════════════════════════╝
-"""Slice raw clustering input to 6 columns and z-score to disk."""
+"""Slice + col-5-clip + per-column MaxAbsScaler, matching 2024 pipeline."""
 
 from __future__ import annotations
 
@@ -27,123 +38,102 @@ from pathlib import Path
 import numpy as np
 from tqdm import tqdm
 
-from stag.constants import RAW_CLUSTERING_INPUT, ZSCORED_CLUSTERING_INPUT
+from stag.constants import MAXABS_CLUSTERING_INPUT, RAW_CLUSTERING_INPUT
 
-# Six-column slice the production SLURM clustering used.  See the
-# manuscript §2.2: "the six accelerometer axes formed the final feature
-# set".  The remaining columns (abs_speed_mPs, tortuosity) are kept on
-# disk in the raw file but are NOT used at fit time.
+# Six-column slice the 2024 production pipeline used.  See the
+# manuscript §2.2: "the six accelerometer axes formed the final
+# feature set".  Columns 6-7 of the raw file are GPS-derived
+# (abs_speed_mPs, tortuosity) and were excluded from clustering.
 ACCEL_COLS: tuple[int, ...] = (0, 1, 2, 3, 4, 5)
+
+# Column 5 in the raw file (Ear_Z) carries nine astronomically large
+# outliers (up to 2 × 10²⁴⁵) that bypassed the upstream sensor-cap
+# clip.  The historical clustering_script.py clipped them to ±7.99
+# with a BADHACK comment; we reproduce the same fix here.
+COL5_CLIP_RANGE: float = 7.99
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--raw", type=Path, default=RAW_CLUSTERING_INPUT,
-                        help="Raw 8-column .npy (default: stag.constants.RAW_CLUSTERING_INPUT).")
-    parser.add_argument("--out", type=Path, default=ZSCORED_CLUSTERING_INPUT,
-                        help="Output 6-column z-scored .npy path "
-                             "(default: stag.constants.ZSCORED_CLUSTERING_INPUT).")
+                        help="Raw 8-column .npy (default: "
+                             "stag.constants.RAW_CLUSTERING_INPUT).")
+    parser.add_argument("--out", type=Path, default=MAXABS_CLUSTERING_INPUT,
+                        help="Output 6-column MaxAbs-scaled .npy path "
+                             "(default: stag.constants.MAXABS_CLUSTERING_INPUT).")
     parser.add_argument("--chunk-rows", type=int, default=2_000_000,
                         help="Rows per streaming chunk (default 2e6 ≈ 96 MB / 6 cols).")
     parser.add_argument("--cols", type=int, nargs="+", default=list(ACCEL_COLS),
                         help="Column indices to keep (default: the six accel axes).")
-    parser.add_argument("--clip-range", type=float, default=8.0,
-                        help="Per-column saturation limit applied before "
-                             "z-scoring (default ±8).  Matches the upstream "
-                             "preprocessing protocol where raw accelerometer "
-                             "values were clipped to the ±8 g sensor range; "
-                             "any value beyond that is a corruption from an "
-                             "earlier ingestion bug (nine such samples found "
-                             "in column 5 of clust_data_raw_20240412.npy with "
-                             "magnitudes up to 2 × 10²⁴⁵).")
+    parser.add_argument("--col5-clip", type=float, default=COL5_CLIP_RANGE,
+                        help="Symmetric clip applied to column 5 (Ear_Z) before "
+                             "computing the per-column max abs.  Default ±7.99 "
+                             "matching the historical clustering_script.py.")
     return parser.parse_args()
 
 
-def _clip_chunk(chunk: np.ndarray, clip_range: float) -> tuple[np.ndarray, np.ndarray]:
-    """Clip ``|x| > clip_range`` to ±clip_range; replace any remaining
-    non-finite values with 0.  Returns the clipped chunk and the
-    per-column count of values that were modified.
+def _clip_col5_inplace(chunk: np.ndarray, cols: list[int], clip_range: float) -> int:
+    """Clip column 5 (if present in ``cols``) of ``chunk`` to ±clip_range.
 
-    Closes the gap from the upstream clipping protocol: most samples
-    were already in ±8 by design, but nine col-5 samples escaped and
-    carry magnitudes up to 2 × 10²⁴⁵.  We re-apply the cap here so the
-    z-score statistics are not poisoned.
+    Returns the number of values that were clamped.  Other columns
+    are untouched — this matches the historical pipeline which only
+    applied the BADHACK to Ear_Z, not the entire matrix.
     """
-    over_range = np.abs(chunk) > clip_range
-    non_finite = ~np.isfinite(chunk)
-    modified = over_range | non_finite
-    out = np.clip(chunk, -clip_range, clip_range)
-    # np.clip preserves NaN; replace those explicitly.
-    if non_finite.any():
-        out = np.where(non_finite, 0.0, out)
-    return out, modified.sum(axis=0).astype(np.int64)
+    if 5 not in cols:
+        return 0
+    col5_idx = cols.index(5)
+    out_of_range = np.abs(chunk[:, col5_idx]) > clip_range
+    if out_of_range.any():
+        chunk[:, col5_idx] = np.clip(chunk[:, col5_idx], -clip_range, clip_range)
+    # Also catch non-finite values that survived the magnitude check.
+    bad = ~np.isfinite(chunk[:, col5_idx])
+    if bad.any():
+        chunk[bad, col5_idx] = 0.0
+    return int(out_of_range.sum()) + int(bad.sum())
 
 
-def _streaming_mu_sigma(
-    raw: np.ndarray, cols: list[int], chunk_rows: int,
-    clip_range: float,
-) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """One pass over the mmap'd raw matrix → per-column mean and std.
+def _streaming_maxabs(
+    raw: np.ndarray, cols: list[int],
+    chunk_rows: int, col5_clip: float,
+) -> tuple[np.ndarray, int]:
+    """One pass over the mmap'd raw matrix → per-column max abs.
 
-    Each chunk is clipped to ±``clip_range`` before being merged into
-    the running statistics via Welford's online algorithm.  Returns
-    the population mean, the sample std (ddof=0, matching
-    ``sklearn.preprocessing.StandardScaler``), and the per-column
-    count of values that hit the saturation limit.
+    Column 5 is clipped to ±``col5_clip`` before its max abs is
+    measured; other columns are left as-is.  Returns the per-column
+    max-abs vector and the total count of col-5 clip events.
     """
-    n_features = len(cols)
-    count = 0
-    mean = np.zeros(n_features, dtype=np.float64)
-    M2 = np.zeros(n_features, dtype=np.float64)
-    clipped = np.zeros(n_features, dtype=np.int64)
+    n_cols = len(cols)
+    maxabs = np.zeros(n_cols, dtype=np.float64)
+    col5_clip_events = 0
 
     n_rows = raw.shape[0]
-    for start in tqdm(range(0, n_rows, chunk_rows), desc="pass 1/2 (mu, sigma)"):
+    for start in tqdm(range(0, n_rows, chunk_rows), desc="pass 1/2 (max abs)"):
         end = min(start + chunk_rows, n_rows)
-        chunk_raw = np.asarray(raw[start:end, cols], dtype=np.float64)
-        chunk, chunk_clipped = _clip_chunk(chunk_raw, clip_range)
-        clipped += chunk_clipped
+        chunk = np.asarray(raw[start:end, cols], dtype=np.float64).copy()
+        col5_clip_events += _clip_col5_inplace(chunk, cols, col5_clip)
+        maxabs = np.maximum(maxabs, np.abs(chunk).max(axis=0))
 
-        m = end - start
-        chunk_mean = chunk.mean(axis=0)
-        chunk_var_times_m = ((chunk - chunk_mean) ** 2).sum(axis=0)
-
-        # Chan/Welford merge.
-        delta = chunk_mean - mean
-        new_count = count + m
-        mean = mean + delta * (m / new_count)
-        M2 = M2 + chunk_var_times_m + delta**2 * (count * m / new_count)
-        count = new_count
-
-    std = np.sqrt(M2 / count)
-    return mean, std, clipped
+    return maxabs, col5_clip_events
 
 
-def _streaming_zscore_write(
-    raw: np.ndarray, cols: list[int], mu: np.ndarray, sigma: np.ndarray,
-    out_path: Path, chunk_rows: int, clip_range: float,
+def _streaming_scale_write(
+    raw: np.ndarray, cols: list[int], maxabs: np.ndarray,
+    out_path: Path, chunk_rows: int, col5_clip: float,
 ) -> None:
-    """Second pass: clip → z-score → write to a new .npy on disk.
-
-    Uses the same clip-to-±``clip_range`` step as the statistics pass
-    so the output is fully consistent with the (mu, sigma) computed
-    in pass 1.
-    """
+    """Second pass: clip col 5, divide by per-column max abs, write."""
     n_rows = raw.shape[0]
-    n_features = len(cols)
+    n_cols = len(cols)
+    safe = np.where(maxabs > 0, maxabs, 1.0)
+
     out = np.lib.format.open_memmap(
         out_path, mode="w+", dtype=np.float64,
-        shape=(n_rows, n_features),
+        shape=(n_rows, n_cols),
     )
-    # Guard against div-by-zero columns (constant features).  Real data
-    # should never trigger this but we set a placeholder sigma=1.0 so
-    # a constant column z-scores to 0 rather than NaN.
-    safe_sigma = np.where(sigma > 0, sigma, 1.0)
     for start in tqdm(range(0, n_rows, chunk_rows), desc="pass 2/2 (write)"):
         end = min(start + chunk_rows, n_rows)
-        chunk_raw = np.asarray(raw[start:end, cols], dtype=np.float64)
-        chunk, _ = _clip_chunk(chunk_raw, clip_range)
-        out[start:end] = (chunk - mu) / safe_sigma
+        chunk = np.asarray(raw[start:end, cols], dtype=np.float64).copy()
+        _clip_col5_inplace(chunk, cols, col5_clip)
+        out[start:end] = chunk / safe
     out.flush()
 
 
@@ -152,35 +142,33 @@ def main() -> None:
     args.out.parent.mkdir(parents=True, exist_ok=True)
 
     raw = np.load(args.raw, mmap_mode="r")
-    print(f"Input      : {args.raw}  shape={raw.shape}  dtype={raw.dtype}")
-    print(f"Keep cols  : {args.cols}")
-    print(f"Clip range : ±{args.clip_range}")
-    print(f"Output     : {args.out}  shape=({raw.shape[0]}, {len(args.cols)})  dtype=float64")
+    print(f"Input         : {args.raw}  shape={raw.shape}  dtype={raw.dtype}")
+    print(f"Keep cols     : {args.cols}")
+    print(f"Col-5 clip    : ±{args.col5_clip}")
+    print(f"Output        : {args.out}  shape=({raw.shape[0]}, {len(args.cols)})  dtype=float64")
     print()
 
-    mu, sigma, clipped = _streaming_mu_sigma(
-        raw, args.cols, args.chunk_rows, args.clip_range,
+    maxabs, col5_clip_events = _streaming_maxabs(
+        raw, args.cols, args.chunk_rows, args.col5_clip,
     )
     print()
-    print("Per-column mu:           ", mu.round(4))
-    print("Per-column sigma:        ", sigma.round(4))
-    print("Per-column clip events:  ", clipped)
-    total_rows = raw.shape[0]
-    print(f"(out of {total_rows:,} rows per column)")
+    print("Per-column max abs (used as MaxAbsScaler divisors):")
+    for i, (col, m) in enumerate(zip(args.cols, maxabs)):
+        print(f"  col {col} : {m:.6f}")
+    print(f"Col-5 clip events: {col5_clip_events}  "
+          f"(historical script reports 9 for clust_data_raw_20240412.npy)")
     print()
 
-    _streaming_zscore_write(
-        raw, args.cols, mu, sigma, args.out, args.chunk_rows, args.clip_range,
+    _streaming_scale_write(
+        raw, args.cols, maxabs, args.out, args.chunk_rows, args.col5_clip,
     )
 
-    # Save the mu/sigma alongside the output so the rebuttal can show
-    # the exact normalisation parameters used.
-    csv_path = args.out.with_suffix(".musigma.csv")
-    np.savetxt(
-        csv_path,
-        np.column_stack([mu, sigma]),
-        delimiter=",", header="mu,sigma", comments="",
-    )
+    # Provenance sidecar so future-anyone can recover the absolute
+    # values from the scaled .npy if needed.
+    csv_path = args.out.with_suffix(".maxabs.csv")
+    header = ",".join(f"col{c}" for c in args.cols)
+    np.savetxt(csv_path, maxabs[None, :], delimiter=",",
+               header=header, comments="")
     print(f"Wrote: {args.out}")
     print(f"Wrote: {csv_path}")
 
