@@ -224,18 +224,21 @@ Shape ``(204_554_618, 8)`` float64.  Columns 0–5 are the six
 accelerometer axes; columns 6–7 are GPS-derived speed and
 tortuosity (excluded from clustering)."""
 
-ZSCORED_CLUSTERING_INPUT: Path = LOCAL_DATA_DIR / "clust_data_zscored_6col.npy"
-"""Six-column z-scored feature matrix derived from
+MAXABS_CLUSTERING_INPUT: Path = LOCAL_DATA_DIR / "clust_data_maxabs_6col.npy"
+"""Six-column MaxAbs-scaled feature matrix derived from
 :data:`RAW_CLUSTERING_INPUT` by
 ``scripts/preprocess_clustering_data.py``.  Shape
-``(204_554_618, 6)`` float64.  This is the file every internal-
-and external-validation analysis consumes."""
+``(204_554_618, 6)`` float64.  Each column is divided by its
+absolute maximum, mapping the data to [-1, 1] per column —
+reproducing the 2024 SLURM pipeline's normalisation exactly
+(MaxAbsScaler + col-5 ±7.99 clip).  This is the file every
+internal- and external-validation analysis consumes."""
 
-ZSCORED_MUSIGMA_CSV: Path = LOCAL_DATA_DIR / "clust_data_zscored_6col.musigma.csv"
-"""Per-column mu and sigma used to produce
-:data:`ZSCORED_CLUSTERING_INPUT`.  Written alongside the .npy
-by the preprocess script; replaces the corrupted
-``clust_data_muSigma_20240412.csv``."""
+MAXABS_SCALER_CSV: Path = LOCAL_DATA_DIR / "clust_data_maxabs_6col.maxabs.csv"
+"""Per-column max-abs divisors used to produce
+:data:`MAXABS_CLUSTERING_INPUT`.  Written alongside the .npy
+by the preprocess script — needed to invert the scaling back
+to physical units for centroid interpretation."""
 
 CLUSTER_RESULTS_DIR: Path = LOCAL_DATA_DIR / "cluster_results" / "deer6raw"
 """Root of the per-fit metadata + centroids + labels tree
