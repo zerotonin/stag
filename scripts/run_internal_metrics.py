@@ -35,8 +35,8 @@ from stag.clustering.meta_analysis import ClusterMetaAnalysis
 from stag.clustering.plotting import plot_internal_metrics_panel
 from stag.constants import (
     CLUSTER_RESULTS_DIR,
+    MAXABS_CLUSTERING_INPUT,
     RESULTS_DIR_DEFAULT,
-    ZSCORED_CLUSTERING_INPUT,
     save_figure,
 )
 
@@ -48,9 +48,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--meta-dir", type=Path, default=CLUSTER_RESULTS_DIR,
                         help="Directory of clustering-meta JSON files "
                              "(default: stag.constants.CLUSTER_RESULTS_DIR).")
-    parser.add_argument("--data-file", type=Path, default=ZSCORED_CLUSTERING_INPUT,
-                        help="Z-scored feature matrix matching the saved "
-                             "centroids (default: stag.constants.ZSCORED_CLUSTERING_INPUT).")
+    parser.add_argument("--data-file", type=Path, default=MAXABS_CLUSTERING_INPUT,
+                        help="MaxAbs-scaled feature matrix matching the saved "
+                             "centroids (default: stag.constants.MAXABS_CLUSTERING_INPUT). "
+                             "Must be in the same per-column scale as the centroids "
+                             "or inertia will be on a different scale to the fit.")
     parser.add_argument("--reduction-percent", type=float, default=0.0,
                         help="Slice of fits to use (default 0 = full-data runs).")
     parser.add_argument("--silhouette-per-cluster", type=int, default=5000)
@@ -111,15 +113,18 @@ def main() -> None:
             on="file_path", how="left",
         )
 
-    # ─── Per-k aggregation (median + 95 % CI across cut positions) ──
+    # ─── Per-k aggregation (median + IQR across cut positions) ──────
     #
     # Each metric: median across the 50 cut positions at delSize_0,
-    # with a 95 % band defined by the 2.5th and 97.5th percentiles of
-    # the per-fit distribution.  Matches the manuscript's existing
-    # "Median ± IQR" convention but with a wider band so the rebuttal
-    # figure shows the full spread, not just the middle half.
-    def _q025(x): return float(np.nanquantile(x, 0.025))
-    def _q975(x): return float(np.nanquantile(x, 0.975))
+    # with the inter-quartile range (25th / 75th percentile) as the
+    # dispersion band.  Matches the manuscript's existing Figure 2A
+    # convention ("median across runs shown as a line; shaded band
+    # shows IQR") — re-reviewers see consistency between the original
+    # and revised figure.  The dispersion at delSize_0 is small enough
+    # that 95 % CI bands were invisible at figure scale; IQR communicates
+    # the same "tightly converged" story honestly.
+    def _q025(x): return float(np.nanquantile(x, 0.25))
+    def _q975(x): return float(np.nanquantile(x, 0.75))
 
     grouped = full.groupby("k_number")
     per_k = grouped.agg(
@@ -185,14 +190,14 @@ def main() -> None:
             n_repeats=args.silhouette_repeats,
             rng=rng,
         )
-        # 95 % band over the per-repeat distribution (n_repeats samples
-        # of the mean silhouette).  Uses the same 2.5/97.5 percentiles
-        # as the other panels for consistency.
+        # IQR over the per-repeat distribution (n_repeats samples of
+        # the mean silhouette).  Same 25/75 percentile choice as the
+        # other panels for consistency with manuscript Figure 2A.
         per_repeat = result["per_repeat"]
         _append((
             result["mean_silhouette"],
-            float(np.quantile(per_repeat, 0.025)),
-            float(np.quantile(per_repeat, 0.975)),
+            float(np.quantile(per_repeat, 0.25)),
+            float(np.quantile(per_repeat, 0.75)),
         ))
 
     summary = selection_summary(
