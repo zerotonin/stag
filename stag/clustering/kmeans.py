@@ -170,25 +170,29 @@ def get_quality(labels, data_gpu_scaled):
     return np.nan
 
 
-def main(tag, n_clusters, deletion_size, deletion_position, random_state, data_file, save_dir):
+def main(
+    tag, n_clusters, deletion_size, deletion_position, random_state,
+    data_file, save_dir, no_rescale: bool = False,
+):
     """Run a single k-means clustering job.
 
-    Parameters
-    ----------
-    tag : str
-        Experiment tag.
-    n_clusters : int
-        Number of clusters.
-    deletion_size : int
-        Percentage of contiguous data to leave out (0 = full data).
-    deletion_position : int
-        Starting position of the leave-out block (percentage).
-    random_state : int
-        Random seed for k-means initialisation.
-    data_file : str
-        Path to the ``.npy`` feature matrix.
-    save_dir : str
-        Root directory for output files.
+    Args:
+        tag:                Experiment tag.
+        n_clusters:         Number of clusters.
+        deletion_size:      Percentage of contiguous data to leave out
+                            (0 = full data).
+        deletion_position:  Starting position of the leave-out block
+                            (percentage).
+        random_state:       Random seed for k-means initialisation.
+        data_file:          Path to the ``.npy`` feature matrix.
+        save_dir:           Root directory for output files.
+        no_rescale:         When True, skip the in-script StandardScaler
+                            and feed the data through to cuML as-is.
+                            Use this when the input is already in a
+                            comparable per-column scale (e.g. the
+                            MaxAbs-normalised file produced by
+                            ``scripts/preprocess_clustering_data.py``),
+                            reproducing the 2024 SLURM pipeline exactly.
     """
     if not _GPU_AVAILABLE:
         raise RuntimeError(
@@ -202,12 +206,16 @@ def main(tag, n_clusters, deletion_size, deletion_position, random_state, data_f
     arraydata = shrink_data(arraydata, deletion_size, deletion_position)
 
     data_gpu = cp.asarray(arraydata)
-    scaler = StandardScaler()
-    data_gpu_scaled = scaler.fit_transform(data_gpu)
+    if no_rescale:
+        data_gpu_scaled = data_gpu
+    else:
+        scaler = StandardScaler()
+        data_gpu_scaled = scaler.fit_transform(data_gpu)
 
     filenames = generate_filename(save_dir, tag, n_clusters, deletion_size, deletion_position)
 
-    print(f"{datetime.datetime.now()} Starting KMeans clustering (k={n_clusters})")
+    print(f"{datetime.datetime.now()} Starting KMeans clustering "
+          f"(k={n_clusters}, no_rescale={no_rescale})")
     kmeans = KMeans(init="k-means||", n_clusters=n_clusters, random_state=random_state)
     kmeans.fit(data_gpu_scaled)
 
@@ -238,6 +246,12 @@ if __name__ == "__main__":
     parser.add_argument("-rs", "--random_state", type=int, default=0, help="Random seed.")
     parser.add_argument("-df", "--data_file_position", type=str, help="Path to .npy data.")
     parser.add_argument("-sd", "--save_dir", type=str, default="./", help="Output directory.")
+    parser.add_argument("--no-rescale", action="store_true",
+                        help="Skip the in-script StandardScaler step.  Use when "
+                             "the input is already in a comparable per-column "
+                             "scale (e.g. the MaxAbs-normalised file from "
+                             "scripts/preprocess_clustering_data.py).  "
+                             "Required to reproduce the 2024 SLURM pipeline.")
 
     args = parser.parse_args()
 
@@ -261,4 +275,5 @@ if __name__ == "__main__":
             args.tag, args.n_clusters, args.deletion_size,
             args.deletion_position, args.random_state,
             args.data_file_position, args.save_dir,
+            no_rescale=args.no_rescale,
         )
