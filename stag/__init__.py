@@ -14,5 +14,5 @@
 # ╚══════════════════════════════════════════════════════════════════╝
 """STAG — Sensor-based Tracking and Analysis of Gait."""
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 __author__ = "Alexander R. H. Matthews, Lindsay R. Matthews, Bart R. H. Geurten"
