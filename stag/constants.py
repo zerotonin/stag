@@ -240,6 +240,28 @@ MAXABS_SCALER_CSV: Path = LOCAL_DATA_DIR / "clust_data_maxabs_6col.maxabs.csv"
 by the preprocess script — needed to invert the scaling back
 to physical units for centroid interpretation."""
 
+DEER_DB: Path = LOCAL_DATA_DIR / "deer_data_gps.db"
+"""SQLite copy of the canonical deer-2024 DB (~58 GB) — six tables:
+``accelerometer_data`` (~222 M rows), ``cluster_labels`` (~204.5 M rows,
+FK ``acc_id`` → ``accelerometer_data.data_id``), ``trajectory_data``
+(GPS, ~207 M rows after upsampling), ``deer_info`` (26 animals),
+``video_observation_reference`` (926 clips), ``video_availability``
+(2.8 M rows).  All required composite/FK indexes are already in
+place.  See ``scripts/cache_label_timeline.py`` for the canonical
+join that aligns DB rows with the saved ``labels.npy``."""
+
+LABEL_TIMELINE_DEER_IDS: Path = LOCAL_DATA_DIR / "label_timeline_deer_ids.npy"
+"""Per-sample ``deer_id`` aligned with the saved k=8 ``labels.npy``
+(shape ``(204_554_618,)`` int8).  Built once by
+``scripts/cache_label_timeline.py`` from the DEER_DB join
+``cluster_labels.acc_id`` → ``accelerometer_data.data_id``."""
+
+LABEL_TIMELINE_TIMESTAMPS: Path = LOCAL_DATA_DIR / "label_timeline_timestamps.npy"
+"""Per-sample wall-clock timestamp aligned with the saved k=8
+``labels.npy`` (shape ``(204_554_618,)`` int64 nanoseconds since
+the Unix epoch, NZ local time as stored in the DB).  Built once
+by ``scripts/cache_label_timeline.py``."""
+
 CLUSTER_RESULTS_DIR: Path = LOCAL_DATA_DIR / "cluster_results" / "deer6raw"
 """Root of the per-fit metadata + centroids + labels tree
 produced by the Aoraki SLURM sweep.  Per-fit JSONs and centroid
