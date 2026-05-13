@@ -1,33 +1,33 @@
 #!/usr/bin/env python
-# ╔══════════════════════════════════════════════════════════════════╗
-# ║  STAG — scripts.run_sequence_stats                               ║
-# ║  « Sprint 3 driver: super-prototypes + circadian + per-animal »  ║
-# ╠══════════════════════════════════════════════════════════════════╣
-# ║  Produces every Sprint 3 deliverable in one shot:                ║
-# ║                                                                  ║
-# ║    results/tables/super_prototype_triplets.csv                   ║
-# ║      Top n-grams with empirical count, null median, q-value,     ║
-# ║      super_prototype flag.  R3 Q5.                               ║
-# ║                                                                  ║
-# ║    results/tables/circadian_hourly_proportions.csv               ║
-# ║      Per-hour PM proportions across the cohort.  Feeds the       ║
-# ║    results/figures/circadian_diurnal.{svg,png}                   ║
-# ║      panel with day-1 / day-2 overlay (R1 + R3).                 ║
-# ║                                                                  ║
-# ║    results/tables/ear_flick_day_night.csv                        ║
-# ║      Per-animal rates + Wilcoxon test result + median ratio.     ║
-# ║      R1 #10.                                                     ║
-# ║                                                                  ║
-# ║    results/tables/per_animal_time_budget.csv                     ║
-# ║    results/figures/per_animal_time_budget.{svg,png}              ║
-# ║      Stacked bar per stag, ordered by inactive proportion.       ║
-# ║      R2 #8.                                                      ║
-# ║                                                                  ║
-# ║  Inputs (all on the local NVMe data drive):                     ║
-# ║    - cluster_results/.../delSize_0/k_8/labels/*.npy (any one)   ║
+# ╔═══════════════════════════════════════════════════════════════════╗
+# ║  STAG — scripts.run_sequence_stats                                ║
+# ║  « Sprint 3 driver: super-prototypes + circadian + per-animal »   ║
+# ╠═══════════════════════════════════════════════════════════════════╣
+# ║  Produces every Sprint 3 deliverable in one shot:                 ║
+# ║                                                                   ║
+# ║    results/tables/super_prototype_triplets.csv                    ║
+# ║      Top n-grams with empirical count, null median, q-value,      ║
+# ║      super_prototype flag.  R3 Q5.                                ║
+# ║                                                                   ║
+# ║    results/tables/circadian_hourly_proportions.csv                ║
+# ║      Per-hour PM proportions across the cohort.  Feeds the        ║
+# ║    results/figures/circadian_diurnal.{svg,png}                    ║
+# ║      panel with day-1 / day-2 overlay (R1 + R3).                  ║
+# ║                                                                   ║
+# ║    results/tables/ear_flick_day_night.csv                         ║
+# ║      Per-animal rates + Wilcoxon test result + median ratio.      ║
+# ║      R1 #10.                                                      ║
+# ║                                                                   ║
+# ║    results/tables/per_animal_time_budget.csv                      ║
+# ║    results/figures/per_animal_time_budget.{svg,png}               ║
+# ║      Stacked bar per stag, ordered by inactive proportion.        ║
+# ║      R2 #8.                                                       ║
+# ║                                                                   ║
+# ║  Inputs (all on the local NVMe data drive):                       ║
+# ║    - cluster_results/.../delSize_0/k_8/labels/*.npy (any one)     ║
 # ║    - label_timeline_deer_ids.npy   (built by cache_label_timeline)║
 # ║    - label_timeline_timestamps.npy (built by cache_label_timeline)║
-# ╚══════════════════════════════════════════════════════════════════╝
+# ╚═══════════════════════════════════════════════════════════════════╝
 """Sprint 3 driver: super-prototypes, circadian, ear-flick day/night, per-animal."""
 
 from __future__ import annotations
