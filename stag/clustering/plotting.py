@@ -199,11 +199,13 @@ def _plot_metric(
     ax, x, y, low=None, high=None,
     *, label: str, colour: str,
 ) -> None:
-    """Single-panel helper — median line + 95 % CI shading + markers.
+    """Single-panel helper — median line + IQR shading + markers.
 
     ``low`` and ``high`` are optional 1-D sequences of the same length
-    as ``y``.  When both are provided, the panel renders a translucent
-    fill between them; otherwise just the median line.
+    as ``y`` (typically the 25th and 75th percentiles).  When both are
+    provided, the panel renders a translucent fill between them;
+    otherwise just the median line.  Matches the manuscript's
+    Figure 2A "median ± IQR" convention.
     """
     x_arr = np.asarray(x)
     y_arr = np.asarray(y, dtype=float)
@@ -216,8 +218,9 @@ def _plot_metric(
         if band_good.any():
             ax.fill_between(
                 x_arr[band_good], low_arr[band_good], high_arr[band_good],
-                color=colour, alpha=0.18, linewidth=0,
-                label=f"{label} 95 % CI",
+                facecolor=colour, alpha=0.35,
+                edgecolor=colour, linewidth=0.6,
+                label=f"{label} IQR",
             )
 
     ax.plot(x_arr[finite], y_arr[finite],
