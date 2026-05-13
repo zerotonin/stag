@@ -32,7 +32,11 @@ classifiers = [
 
 dependencies = [
     "numpy>=1.24",
-    "pandas>=2.0",
+    # pandas>=1.5 — keeps the package installable into the RAPIDS 24.02
+    # env on Aoraki, which pins cudf <-> pandas<2.0.  STAG itself does
+    # not use any pandas-2.x-only feature; the workstation env will
+    # happily satisfy this with whichever 2.x is already installed.
+    "pandas>=1.5",
     "scipy>=1.10",
     "scikit-learn>=1.3",
     "sqlalchemy>=2.0",
@@ -40,6 +44,7 @@ dependencies = [
     "seaborn>=0.12",
     "tqdm>=4.65",
     "kneed>=0.8",
+    "astral>=3.0",
 ]
 
 [project.optional-dependencies]
