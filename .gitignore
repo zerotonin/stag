@@ -38,6 +38,10 @@ Thumbs.db
 # Sphinx build
 docs/_build/
 
+# Generated analysis artefacts (figures, tables, supplementary CSVs).
+# Reproducible from the scripts/run_*.py drivers — do not commit.
+results/
+
 # Test / coverage
 .pytest_cache/
 htmlcov/
