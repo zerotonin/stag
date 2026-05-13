@@ -220,16 +220,6 @@ class ClusterMetaAnalysis:
         return centroids, most_stable["file_path"]
 
     @staticmethod
-    def de_zscore_centroids(
-        centroids: np.ndarray, mu: np.ndarray, sigma: np.ndarray,
-    ) -> np.ndarray:
-        """Reverse z-scoring of ``centroids`` using per-feature ``mu`` and ``sigma``."""
-        out = np.zeros_like(centroids)
-        for i in range(centroids.shape[1]):
-            out[:, i] = centroids[:, i] * sigma[i] + mu[i]
-        return out
-
-    @staticmethod
     def normalize_centroids(centroids: np.ndarray) -> np.ndarray:
         """Normalise each feature to ``[-1, 1]`` by dividing by its absolute max."""
         abs_max = np.max(np.abs(centroids), axis=0)

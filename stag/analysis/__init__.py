@@ -1,1 +1,1 @@
-"""Behavioural sequence analysis and preprocessing."""
+"""Behavioural sequence analysis."""
