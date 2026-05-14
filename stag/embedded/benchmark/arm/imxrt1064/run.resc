@@ -1,0 +1,23 @@
+:name: imxrt1064 STAG benchmark
+:description: Load the STAG nearest-centroid benchmark on i.MX RT1064
+:description: (Cortex-M7 @ 600 MHz) and expose a gdb stub so the
+:description: host-side runner can read the executed-instruction
+:description: counter between two bench_done hits.
+
+using sysbus
+
+mach create
+machine LoadPlatformDescription @platforms/cpus/imxrt1064.repl
+
+# ELF path is injected by the runner via $bin substitution (Renode
+# 1.15.3's -e runs AFTER the .resc, so we cannot rely on -e to set
+# variables — the runner string-replaces $bin in this file before
+# launching Renode).
+sysbus LoadELF $bin
+
+machine StartGdbServer 3333
+
+# Firmware loops the benchmark forever; gdb attaches whenever it is
+# ready and catches the next bench_done.  Single hbreak is used
+# because the M7's FPB has limited resources in this Renode model.
+start
