@@ -65,8 +65,9 @@ class McuTarget:
 # cycles → ns for reporting; Renode's ExecutedInstructions counter
 # is clock-independent).
 DEFAULT_TARGETS: list[McuTarget] = [
-    McuTarget("nrf52840",  64_000_000),    # Cortex-M4F
-    McuTarget("imxrt1064", 600_000_000),   # Cortex-M7
+    McuTarget("nrf52840",      64_000_000),    # Cortex-M4F
+    McuTarget("stm32f4_disco", 168_000_000),   # Cortex-M4F (STM32F407)
+    McuTarget("imxrt1064",     600_000_000),   # Cortex-M7
 ]
 
 
