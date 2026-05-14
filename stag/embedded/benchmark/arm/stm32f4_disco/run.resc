@@ -1,0 +1,25 @@
+:name: stm32f4_disco STAG benchmark
+:description: Load the STAG nearest-centroid benchmark on STM32F407
+:description: (Cortex-M4F @ 168 MHz, the original STM32F4-Discovery)
+:description: and expose a gdb stub so the host-side runner can read
+:description: ExecutedInstructions between two bench_done hits.
+
+using sysbus
+
+mach create
+machine LoadPlatformDescription @platforms/cpus/stm32f4.repl
+
+# The cpu-only .repl is sufficient — we don't need the
+# stm32f4_discovery board file's LED/button bindings for a
+# headless benchmark.  Keeps the platform load minimal.
+
+# ELF path is injected by the runner via $bin substitution.
+sysbus LoadELF $bin
+
+machine StartGdbServer 3333
+
+# Firmware loops the benchmark forever; runner attaches gdb on
+# port 3333 and catches the next bench_done.  Single hbreak is
+# used because the Renode CortexM FPB model honours only one
+# reliably under our access pattern.
+start
