@@ -65,7 +65,8 @@ class McuTarget:
 # cycles → ns for reporting; Renode's ExecutedInstructions counter
 # is clock-independent).
 DEFAULT_TARGETS: list[McuTarget] = [
-    McuTarget("nrf52840",      64_000_000),    # Cortex-M4F
+    McuTarget("samd21",         48_000_000),   # Cortex-M0+ (SAMD21G18A)
+    McuTarget("nrf52840",       64_000_000),   # Cortex-M4F
     McuTarget("stm32f4_disco", 168_000_000),   # Cortex-M4F (STM32F407)
     McuTarget("imxrt1064",     600_000_000),   # Cortex-M7
 ]
@@ -176,9 +177,15 @@ def _run_one(
 
     # Renode 1.15.3's `-e` runs AFTER the positional script — so a
     # ``$bin=@...`` injection never gets read by the .resc.  Render
-    # the .resc template into a temp file with the ELF path baked in.
+    # the .resc template into a temp file with absolute paths baked
+    # in for $bin (the ELF) and $repl (the per-target platform file
+    # when the target ships its own — used for chips Renode does
+    # not bundle a .repl for, e.g. SAMD21 / RP2040).
     resc_template = target.resc.read_text()
     rendered_resc = resc_template.replace("$bin", f"@{target.elf}")
+    custom_repl = THIS_DIR / target.name / f"{target.name}.repl"
+    if custom_repl.is_file():
+        rendered_resc = rendered_resc.replace("$repl", f"@{custom_repl}")
     with tempfile.NamedTemporaryFile("w", suffix=".resc",
                                     delete=False) as f:
         f.write(rendered_resc)
