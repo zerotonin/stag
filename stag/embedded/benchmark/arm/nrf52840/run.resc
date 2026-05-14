@@ -1,0 +1,21 @@
+:name: nrf52840 STAG benchmark
+:description: Load the STAG nearest-centroid benchmark on nRF52840
+:description: and expose a gdb stub so the host-side runner can read
+:description: the cycle counter after the firmware halts at bench_done.
+
+using sysbus
+
+mach create
+machine LoadPlatformDescription @platforms/cpus/nrf52840.repl
+
+# ELF path is passed in via the $bin macro variable (set by the runner).
+sysbus LoadELF $bin
+
+machine StartGdbServer 3333
+
+# The firmware runs the benchmark in an outer infinite loop, so it
+# is safe (and necessary) to start the CPU before gdb attaches.
+# The runner sets hardware breakpoints at bench_start / bench_done
+# and the CPU hits them on the next iteration regardless of when
+# gdb showed up.
+start
