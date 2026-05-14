@@ -49,3 +49,13 @@ htmlcov/
 
 # Generated C header (regenerable from export_centroids.py)
 stag/embedded/centroids.h
+
+# Sprint 4 — AVR benchmark generated artefacts (regenerable)
+stag/embedded/benchmark/avr/test_vectors.h
+stag/embedded/benchmark/avr/build/
+stag/embedded/benchmark/avr/results_avr.csv
+
+# Sprint 4 — ARM benchmark generated artefacts (regenerable)
+stag/embedded/benchmark/arm/*/test_vectors.h
+stag/embedded/benchmark/arm/build/
+stag/embedded/benchmark/arm/results_arm.csv
