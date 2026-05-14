@@ -59,3 +59,13 @@ stag/embedded/benchmark/avr/results_avr.csv
 stag/embedded/benchmark/arm/*/test_vectors.h
 stag/embedded/benchmark/arm/build/
 stag/embedded/benchmark/arm/results_arm.csv
+
+# Sprint 4 — MSP430 benchmark generated artefacts (regenerable)
+stag/embedded/benchmark/msp430/test_vectors.h
+stag/embedded/benchmark/msp430/build/
+stag/embedded/benchmark/msp430/results_msp430.csv
+
+# Sprint 4 — Xtensa (ESP32) benchmark generated artefacts (regenerable)
+stag/embedded/benchmark/xtensa/*/test_vectors.h
+stag/embedded/benchmark/xtensa/*/build/
+stag/embedded/benchmark/xtensa/results_xtensa.csv
