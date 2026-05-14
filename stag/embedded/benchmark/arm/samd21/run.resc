@@ -1,0 +1,22 @@
+:name: samd21 STAG benchmark
+:description: Load the STAG nearest-centroid benchmark on SAMD21G18A
+:description: (Cortex-M0+ @ 48 MHz) and expose a gdb stub.  Renode
+:description: 1.15.3 does not bundle a SAMD21 .repl, so the runner
+:description: injects an absolute path to our shipped samd21.repl
+:description: via $repl substitution before launching Renode.
+
+using sysbus
+
+mach create
+machine LoadPlatformDescription $repl
+
+# Both $repl and $bin are substituted by renode_runner.py before
+# Renode sees this file — Renode 1.15.3's -e runs AFTER the script
+# so command-line variable injection is not an option.
+sysbus LoadELF $bin
+
+machine StartGdbServer 3333
+
+# Firmware loops the benchmark forever; runner attaches gdb on
+# port 3333 and catches the next bench_done.
+start
