@@ -40,9 +40,6 @@ stag/
 │   └── utils/              # Logging, filename generation, helpers
 ├── scripts/                # Runnable entry-point scripts
 ├── slurm/                  # HPC job submission scripts (NeSI / Aoraki)
-├── notebooks/              # Jupyter notebooks
-│   ├── data_merging/       # Per-deer data merging notebooks
-│   └── exploratory/        # Exploratory analysis & tortuosity
 ├── data/                   # Deer code CSVs and auxiliary data
 │   └── deer_codes/         # Animal identification lookup tables
 ├── docs/                   # Sphinx documentation source
@@ -178,6 +175,18 @@ details.
 ## Development history
 
 This pipeline was developed at the Department of Zoology, University of
-Otago. Early development took place under
-[github.com/alexrhmatthews/headshake_project](https://github.com/alexrhmatthews/headshake_project);
-the codebase was reorganised and renamed to STAG for publication.
+Otago. Early development — including the original per-replicate
+exploratory Jupyter notebooks, the per-deer data-merging notebooks, and
+the tortuosity-analysis notebooks — took place under
+[github.com/alexrhmatthews/headshake_project](https://github.com/alexrhmatthews/headshake_project)
+and remains available there for provenance. The codebase was then
+reorganised and renamed to STAG for publication: every function the
+original notebooks performed has been refactored into the production
+Python package (`stag.sync.data_sync` and `stag.sync.utils` for the
+ear/head IMU peak-matching and 3-drop calibration sync; `stag.gps.*`
+for the GPS and tortuosity analyses; `stag.database.*` for the
+SQLAlchemy ORM and SQLite consolidation; `stag.clustering.*` and
+`stag.analysis.*` for k-means and the first-order Markov sequence
+analysis) and is exercised by the `scripts/` entry points and the
+`tests/` suite. The notebooks themselves are therefore not duplicated
+in this repository.
