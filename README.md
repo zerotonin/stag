@@ -71,7 +71,21 @@ For GPU-accelerated clustering you additionally need
 
 ## Quick start
 
-### 1. Synchronise sensor data
+The pipeline runs in five stages. Each stage is a single command from the
+repo root and produces the input file the next stage consumes; paths are
+resolved from `stag/constants.py` and can be overridden via the CLI flags
+shown for each stage. The full sequence reproduces the manuscript's
+Sprint 1–3 analyses end-to-end.
+
+### 0. Install + smoke test
+
+```bash
+conda env create -f environment.yml && conda activate stag
+pip install -e ".[dev]"
+pytest                                                # 80+ unit tests
+```
+
+### 1. Synchronise ear + head IMU signals into a SQLite database
 
 ```python
 from stag.sync.data_sync import BetterDataSync
@@ -82,32 +96,80 @@ syncer = BetterDataSync(
     ear_data=ear_df,
     window_dict={"start": 0, "end": 50000},
 )
-syncer.run_synchronization()
+syncer.run_synchronization()                          # writes deer_data_gps.db
 ```
 
-### 2. Run clustering
+The synchroniser locates three calibration drops in both signals,
+solves for the time offset, fuses ear + head into a single
+6-dimensional accelerometer stream, and writes one row per sample into
+the SQLite database at `LOCAL_DATA_DIR/deer_data_gps.db`. One deer per
+call; loop over the deer-code lookup CSV in `data/deer_codes/` to fill
+the full cohort.
+
+### 2. Pre-process the database into a clustering-ready array
 
 ```bash
-python scripts/run_clustering.py \
-    -t deer8 -nc 8 -ds 0 -dp 0 -rs 0 \
-    -df data/clust_data_deer8.npy \
-    -sd results/
+python scripts/preprocess_clustering_data.py          # → clust_data_maxabs_6col.npy
 ```
 
-Or submit a SLURM sweep:
+Streams the synchronised database, clips column 5 to ± 7.99 g (the per-
+animal sensor saturation), applies the per-column MaxAbs scaler whose
+divisors are recorded in `clust_data_maxabs_6col.maxabs.csv`, and emits
+a memmap-friendly `.npy` that the GPU clustering reads directly.
+
+### 3. Cluster and validate (internal metrics + Figure 2)
 
 ```bash
-sbatch slurm/run_slurm_main_clustering.sh
+python scripts/run_internal_metrics.py --chosen-k 8   # → results/internal_metrics/
 ```
 
-### 3. Analyse behavioural sequences
+Sweeps k = 2 .. 30 under the contiguous-leave-out protocol (50 cut
+positions per k), computes Calinski–Harabasz, Hungarian-matched
+centroid stability, stratified Silhouette, and Kneedle elbow on the
+inertia curve, and renders the four-panel Figure 2 plus a one-row
+`selection_summary.csv` recording the k = 8 choice and its bounds.
 
-```python
-from stag.analysis.label_analysis import LabelAnalyser
+### 4. External validation against video annotations
 
-analyser = LabelAnalyser("results/labels.npy", fps=50)
-analyser.main(cutoff=2, save_path="results/label_analysis.json")
+```bash
+python scripts/run_external_validation.py            # → results/sprint2/
 ```
+
+Loads every groundtruthing register found under `data/annotations/`,
+computes the confusion matrix, ARI and NMI against the k = 8 labels,
+and runs the 1 000-bootstrap sub-human test. Writes a Markdown report
+and the underlying CSVs alongside Figure 3.
+
+### 5. Sequence statistics (super-prototypes, circadian, ear-flick)
+
+```bash
+python scripts/cache_label_timeline.py                # one-off helper
+python scripts/run_sequence_stats.py --n-shuffles 1000 --percentile 99.9
+                                                      # → results/sprint3/
+```
+
+Run-length-encodes the per-sample cluster labels into bout streams,
+generates the first-order Markov shuffle null distribution, identifies
+super-prototypes that beat the joint 99.9th-percentile AND
+Benjamini–Hochberg q < 0.05 threshold, and writes
+`super_prototype_triplets.csv` plus the day/night Wilcoxon table and
+per-animal hourly time budgets.
+
+### Optional: GPS trajectory + tortuosity
+
+```bash
+python scripts/run_tortuosity.py R4_D1 bart_paths     # one deer, one path-system
+```
+
+Loads the GPS track for the named deer, computes Hausdorff-corrected
+tortuosity and speed, and saves the trajectory + summary plots.
+
+Each stage is independent — re-run any stage after changing its
+parameters without invalidating the earlier ones, as long as the input
+file from the previous stage is still on disk.
+
+For the SLURM-orchestrated versions of stages 2 and 3 (cohort-scale
+runs on the Aoraki HPC cluster), see [`slurm/`](slurm/).
 
 ## Hardware deployment
 
