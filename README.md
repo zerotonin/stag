@@ -114,14 +114,35 @@ analyser.main(cutoff=2, save_path="results/label_analysis.json")
 
 ## Hardware deployment
 
-The trained nearest-centroid classifier was benchmarked on embedded
-microcontrollers:
+The trained nearest-centroid classifier (`stag.embedded.nearest_centroid`,
+Q4.12 fixed-point, K = 8, D = 6) was benchmarked on ten microcontrollers
+spanning every architectural class currently used in animal-borne
+biologger and maker-board deployments. The identical C source was
+compiled with the vendor-recommended `gcc` cross-toolchain at `-Os -g`
+and run under a cycle-tracking emulator (simavr for AVR, Renode for
+Cortex-M, mspdebug for MSP430, Espressif QEMU for Xtensa). Per-MCU
+firmware, linker scripts, and Python runners live under
+[`stag/embedded/benchmark/`](stag/embedded/benchmark/).
 
-| Processor | Classifications / sec |
-|-----------|----------------------|
-| Arduino Uno (16 MHz ATmega328P) | 4.3 × 10⁸ |
-| Arduino Micro | 4.3 × 10⁸ |
-| Intel i7-13700H (single core) | 2.6 × 10⁵ |
+| MCU | Architecture | Clock | Cyc / call | Throughput | × 50 Hz |
+|---|---|---:|---:|---:|---:|
+| ATmega328P (Arduino Uno)             | 8-bit AVR        |  16 MHz |  3 554    | 4.5 k / s   |     90× |
+| ATmega32U4 (Pro Micro / Feather)     | 8-bit AVR        |  16 MHz |  3 554    | 4.5 k / s   |     90× |
+| ATmega2560 (Arduino Mega)            | 8-bit AVR        |  16 MHz |  3 730    | 4.3 k / s   |     86× |
+| MSP430G2553 (TI LaunchPad)           | 16-bit MSP430    |  16 MHz | 31 652    | 506 / s     |     10× |
+| SAMD21G18A (Feather M0 / MKR Zero)   | Cortex-M0+       |  48 MHz |    798 ‡  |  60 k / s   |  1 200× |
+| nRF52840 (Feather nRF52840)          | Cortex-M4F       |  64 MHz |    415 ‡  | 154 k / s   |  3 080× |
+| RP2040 (Raspberry Pi Pico)           | Cortex-M0+       | 133 MHz |    798 ‡  | 167 k / s   |  3 340× |
+| STM32F407 (STM32F4-Discovery)        | Cortex-M4F       | 168 MHz |    415 ‡  | 405 k / s   |  8 100× |
+| ESP32 (Espressif WROOM-32)           | Xtensa LX6       | 240 MHz |    188 §  | 1.28 M / s  | 25 600× |
+| i.MX RT1064 (NXP RT106x / Teensy)    | Cortex-M7        | 600 MHz |    415 ‡† | 1.45 M / s  | 29 000× |
+
+Every silicon class clears the 50 Hz inertial-sampling budget by at
+least an order of magnitude, with the value-line MSP430G2553 (no
+hardware multiplier; software-emulated `__mulhi3`) being the slowest
+at a 10× margin.
+
+<sub>‡ Renode `cpu ExecutedInstructions`, single-issue — silicon will be the same or faster. † Cortex-M7's dual-issue pipeline typically realises ≈ 1.3 IPC on integer workloads; RT106x silicon throughput exceeds the reported value by an estimated 25 %. § Espressif QEMU virtual CCOUNT under `-icount shift=auto`; pipeline and cache effects not modelled. AVR rows are simavr-measured hardware cycles.</sub>
 
 <!-- ## Citation
 
