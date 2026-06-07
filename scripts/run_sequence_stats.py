@@ -51,6 +51,7 @@ from stag.analysis.super_prototypes import (
     per_animal_bout_streams,
 )
 from stag.constants import (
+    CANONICAL_K8_LABELS,
     CLUSTER_RESULTS_DIR,
     LABEL_TIMELINE_DEER_IDS,
     LABEL_TIMELINE_TIMESTAMPS,
@@ -90,14 +91,13 @@ def parse_args() -> argparse.Namespace:
 def _resolve_labels(explicit: Path | None) -> Path:
     if explicit is not None:
         return explicit
-    candidates = sorted(
-        (CLUSTER_RESULTS_DIR / "delSize_0" / "k_8" / "labels").glob("*.npy"),
+    if CANONICAL_K8_LABELS.exists():
+        return CANONICAL_K8_LABELS
+    raise SystemExit(
+        f"Canonical k=8 labels {CANONICAL_K8_LABELS.name} not found.  "
+        "Regenerate with the nearest-manuscript-centroid pipeline or "
+        "pass --labels explicitly.",
     )
-    if not candidates:
-        raise SystemExit(
-            "No k=8 labels found.  Pass --labels explicitly.",
-        )
-    return candidates[0]
 
 
 def _ear_flick_pms() -> list[int]:
