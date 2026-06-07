@@ -75,12 +75,37 @@ Documentation = "https://zerotonin.github.io/stag/"
 include = ["stag*"]
 
 [tool.ruff]
-line-length = 100
+line-length = 120
 target-version = "py310"
+exclude = [
+    "stag/_legacy",        # archived pre-refactor code, intentional rot
+    "docs/_build",         # Sphinx output
+    "results",             # generated figures/tables
+    "stag/embedded/benchmark/*/build",
+]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "W", "D"]
-ignore = ["D100", "D104"]
+ignore = [
+    "D100",  # missing-docstring-in-public-module (covered by ASCII banner)
+    "D104",  # missing-docstring-in-public-package
+    "D203",  # one-blank-line-before-class (mutually exclusive with D211)
+    "D213",  # multi-line-summary-second-line (mutually exclusive with D212)
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Test files: the test name and class name ARE the documentation; the
+# discovery-by-prefix convention makes a separate docstring redundant.
+"tests/**/*.py" = ["D101", "D102", "D103", "D106", "D107"]
+# CLI / driver scripts are self-documenting via argparse --help; do not
+# require per-function docstrings on every helper used inside a script.
+"scripts/**/*.py" = ["D101", "D102", "D103", "D107"]
+# SLURM-orchestration scripts inside the package are entry points, not
+# library API; same exemption as scripts/.
+"stag/slurm/**/*.py" = ["D101", "D102", "D103", "D107"]
+# Embedded benchmark runners are emulator drivers (called from Make
+# targets), not library API; same exemption as scripts/.
+"stag/embedded/benchmark/**/*.py" = ["D101", "D102", "D103", "D107"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
