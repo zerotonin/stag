@@ -28,6 +28,14 @@ if TYPE_CHECKING:
     import pandas as pd
 
 class CentroidDashboard:
+    """Render the per-centroid radar + metrics dashboard.
+
+    Reads a ``centroid_label_info.json`` produced by the meta-analysis
+    pipeline and renders one radar chart per centroid showing the
+    feature values plus a summary table of behavioural metrics
+    (prevalence, mean bout duration, mean speed, etc.).
+    """
+
     def __init__(self, centroids_info_path):
         """Load centroids information and additional metrics from a JSON file."""
         with open(centroids_info_path, 'r') as file:
@@ -38,16 +46,16 @@ class CentroidDashboard:
     def plot_radar_and_metrics(self,feature_set):
         """Plots a radar chart for each centroid with additional metrics."""
         n_clusters = len(self.centroids)
-        
+
         # Setup figure and grid
         fig, axs = plt.subplots(nrows=3,ncols=3, figsize=(15, 10), subplot_kw=dict(polar=True))
-        axs = axs.flatten() 
+        axs = axs.flatten()
         if n_clusters == 1:
             axs = [axs]  # Ensure axs is iterable for a single cluster
-        
+
         for ax, centroid_info in zip(axs[0:n_clusters], self.centroids):
             self._plot_single_cluster(ax, centroid_info,feature_set)
-        
+
         plt.tight_layout()
         plt.show()
 
@@ -63,7 +71,11 @@ class CentroidDashboard:
     def _plot_pie_chart(self, ax, centroid_info):
         """Create inset for Pie Chart and add percentage text below it."""
         ax_inset = ax.inset_axes([-0.5, 0.3, 0.5, 0.7])
-        ax_inset.pie([centroid_info['percentage'], 100 - centroid_info['percentage']], startangle=90, counterclock=False, colors=['#ff9999','#66b3ff'])
+        ax_inset.pie(
+            [centroid_info["percentage"], 100 - centroid_info["percentage"]],
+            startangle=90, counterclock=False,
+            colors=["#ff9999", "#66b3ff"],
+        )
         ax_inset.set_aspect("equal")
         percentage_text = f"{centroid_info['percentage']:.2f}%"
         ax_inset.text(0.5, -0.1, percentage_text, transform=ax_inset.transAxes, ha="center", va="top", fontsize=9)
