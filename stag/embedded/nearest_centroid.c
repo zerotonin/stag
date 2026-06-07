@@ -2,26 +2,26 @@
  * ║  STAG — embedded.nearest_centroid                                ║
  * ║  « bare-metal nearest-centroid classifier — implementation »     ║
  * ╠══════════════════════════════════════════════════════════════════╣
- * ║  Two passes, no allocations, no library calls.  Compiles cleanly║
- * ║  with -O2 -Wall -Wextra on every cross-toolchain in the Sprint  ║
- * ║  4 matrix (avr-gcc, arm-none-eabi-gcc, msp430-elf-gcc,          ║
- * ║  xtensa-esp32-elf-gcc) and on the host gcc used for the         ║
+ * ║  Two passes, no allocations, no library calls.  Compiles cleanly ║
+ * ║  with -O2 -Wall -Wextra on every cross-toolchain in the Sprint   ║ 
+ * ║  4 matrix (avr-gcc, arm-none-eabi-gcc, msp430-elf-gcc,           ║
+ * ║  xtensa-esp32-elf-gcc) and on the host gcc used for the          ║
  * ║  parity test.                                                    ║
  * ║                                                                  ║
- * ║  Q4.12 arithmetic:                                              ║
- * ║    input   : int16_t in Q4.12 (range ±2 typical, ±8 max)        ║
- * ║    diff    : int16_t in Q4.12                                   ║
- * ║    diff²   : int32_t in Q8.24                                   ║
- * ║    sum_6   : int32_t in Q8.24                                   ║
+ * ║  Q4.12 arithmetic:                                               ║
+ * ║    input   : int16_t in Q4.12 (range ±2 typical, ±8 max)         ║
+ * ║    diff    : int16_t in Q4.12                                    ║
+ * ║    diff²   : int32_t in Q8.24                                    ║
+ * ║    sum_6   : int32_t in Q8.24                                    ║
  * ║                                                                  ║
- * ║  Worst-case per-axis squared: (2 · 2¹²)² = 2²⁶ = 67_108_864.    ║
- * ║  Six summed: ≤ 4·10⁸, comfortably under INT32_MAX (2.1·10⁹).    ║
+ * ║  Worst-case per-axis squared: (2 · 2¹²)² = 2²⁶ = 67_108_864.     ║
+ * ║  Six summed: ≤ 4·10⁸, comfortably under INT32_MAX (2.1·10⁹).     ║
  * ║                                                                  ║
- * ║  The classifier does an early-out when the partial sum already  ║
- * ║  exceeds the current best — important on AVR where a multiply  ║
- * ║  is ~5 cycles.  Does not change the final cluster choice; the  ║
- * ║  early-out optimisation is bit-identical to the no-early-out   ║
- * ║  variant on the argmin output (proven by the parity test).     ║
+ * ║  The classifier does an early-out when the partial sum already   ║
+ * ║  exceeds the current best — important on AVR where a multiply    ║
+ * ║  is ~5 cycles.  Does not change the final cluster choice; the    ║
+ * ║  early-out optimisation is bit-identical to the no-early-out     ║
+ * ║  variant on the argmin output (proven by the parity test).       ║
  * ╚══════════════════════════════════════════════════════════════════╝ */
 
 #include "nearest_centroid.h"

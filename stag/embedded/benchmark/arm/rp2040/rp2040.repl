@@ -1,0 +1,41 @@
+// ──────────────────────────────────────────────────────────────────
+//  STAG — embedded.benchmark.arm.rp2040.rp2040.repl
+//  « minimal Renode platform for the Raspberry Pi RP2040 »
+//
+//  Renode 1.15.3 does not ship an RP2040 .repl.  Real silicon is
+//  dual-core Cortex-M0+ with an XIP-flash boot flow (boot ROM at
+//  0x00000000 → second-stage bootloader in QSPI flash at
+//  0x10000000 → user code).  We model only what the benchmark
+//  needs: one Cortex-M0+ core, an NVIC, and two memory regions.
+//
+//  Simplification — flash region is mapped at 0x00000000 rather
+//  than the real XIP region at 0x10000000.  Linking firmware to
+//  the ROM region lets the standard Cortex-M reset (read SP and PC
+//  from 0x00000000) work without modelling the boot ROM.  Cycle
+//  counts are unaffected — the M0+ executes the same Thumb-1
+//  instructions wherever the code lives.  A real on-silicon port
+//  would need a Pico-SDK second-stage bootloader and a 0x10000000
+//  link address; out of scope for the instruction-count rebuttal.
+//
+//  Silicon mapping mapped here (single-core slice):
+//    flash   0x00000000  2 MB    (matches a Pi Pico's W25Q16JV)
+//    sram    0x20000000  256 KB  (RP2040 silicon is 264 KB across
+//                                 6 banks; we use the contiguous
+//                                 256 KB slice for simplicity)
+//    CPU     Cortex-M0+ @ 133 MHz
+// ──────────────────────────────────────────────────────────────────
+
+cpu: CPU.CortexM @ sysbus
+    cpuType: "cortex-m0+"
+    nvic: nvic
+
+nvic: IRQControllers.NVIC @ sysbus 0xE000E000
+    priorityMask: 0xF0
+    systickFrequency: 133000000
+    IRQ -> cpu@0
+
+flash: Memory.MappedMemory @ sysbus 0x00000000
+    size: 0x200000
+
+sram: Memory.MappedMemory @ sysbus 0x20000000
+    size: 0x40000

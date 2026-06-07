@@ -67,6 +67,7 @@ class McuTarget:
 DEFAULT_TARGETS: list[McuTarget] = [
     McuTarget("samd21",         48_000_000),   # Cortex-M0+ (SAMD21G18A)
     McuTarget("nrf52840",       64_000_000),   # Cortex-M4F
+    McuTarget("rp2040",        133_000_000),   # Cortex-M0+ (Raspberry Pi Pico)
     McuTarget("stm32f4_disco", 168_000_000),   # Cortex-M4F (STM32F407)
     McuTarget("imxrt1064",     600_000_000),   # Cortex-M7
 ]

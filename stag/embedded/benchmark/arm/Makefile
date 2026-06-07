@@ -29,13 +29,14 @@ NRF52840_ARCH      := -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16
 STM32F4_DISCO_ARCH := -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16
 # Cortex-M7 (iMXRT1064)          : hard-float, FPv5-D16 (double precision)
 IMXRT1064_ARCH     := -mcpu=cortex-m7 -mthumb -mfloat-abi=hard -mfpu=fpv5-d16
-# Cortex-M0+ (SAMD21)            : soft-float (no FPU on M0+)
+# Cortex-M0+ (SAMD21, RP2040)    : soft-float (no FPU on M0+)
 SAMD21_ARCH        := -mcpu=cortex-m0plus -mthumb -mfloat-abi=soft
-# Add others (rp2040, etc.) as Phase 4e+ targets land.
+RP2040_ARCH        := -mcpu=cortex-m0plus -mthumb -mfloat-abi=soft
+# Add others (msp430, esp32) as Phase 4f+ targets land.
 
-.PHONY: all clean nrf52840 imxrt1064 stm32f4_disco samd21
+.PHONY: all clean nrf52840 imxrt1064 stm32f4_disco samd21 rp2040
 
-all: nrf52840 imxrt1064 stm32f4_disco samd21
+all: nrf52840 imxrt1064 stm32f4_disco samd21 rp2040
 
 # ── nRF52840 ──────────────────────────────────────────────────────
 nrf52840: $(BUILD_DIR)/nrf52840/benchmark.elf $(BUILD_DIR)/nrf52840/benchmark.lss
@@ -97,6 +98,21 @@ $(BUILD_DIR)/samd21/benchmark.elf: $(SOURCES) samd21/linker.ld samd21/test_vecto
 $(BUILD_DIR)/samd21/benchmark.lss: $(BUILD_DIR)/samd21/benchmark.elf
 	$(OBJDUMP) -h -S $< > $@
 
+# ── RP2040 (Raspberry Pi Pico, Cortex-M0+) ────────────────────────
+rp2040: $(BUILD_DIR)/rp2040/benchmark.elf $(BUILD_DIR)/rp2040/benchmark.lss
+
+$(BUILD_DIR)/rp2040:
+	@mkdir -p $@
+
+$(BUILD_DIR)/rp2040/benchmark.elf: $(SOURCES) rp2040/linker.ld rp2040/test_vectors.h | $(BUILD_DIR)/rp2040
+	$(CC) $(RP2040_ARCH) $(COMMON_CFLAGS) -I$(SRC_DIR)/rp2040 \
+		$(COMMON_LDFLAGS) -T$(SRC_DIR)/rp2040/linker.ld \
+		-o $@ $(SOURCES)
+	@$(SIZE) --format=berkeley $@
+
+$(BUILD_DIR)/rp2040/benchmark.lss: $(BUILD_DIR)/rp2040/benchmark.elf
+	$(OBJDUMP) -h -S $< > $@
+
 # ── Inputs (regenerable) ──────────────────────────────────────────
 # The Makefile lives at stag/embedded/benchmark/arm/Makefile; the repo
 # root (containing the stag/ package) is four levels up.
@@ -122,6 +138,12 @@ samd21/test_vectors.h:
 		--arch arm \
 		--out stag/embedded/benchmark/arm/samd21/test_vectors.h
 
+rp2040/test_vectors.h:
+	@cd $(REPO_ROOT) && PYTHONPATH=. python -m stag.embedded.benchmark.avr.gen_inputs \
+		--arch arm \
+		--out stag/embedded/benchmark/arm/rp2040/test_vectors.h
+
 clean:
 	rm -rf $(BUILD_DIR) nrf52840/test_vectors.h imxrt1064/test_vectors.h \
-	       stm32f4_disco/test_vectors.h samd21/test_vectors.h
+	       stm32f4_disco/test_vectors.h samd21/test_vectors.h \
+	       rp2040/test_vectors.h
