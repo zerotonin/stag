@@ -10,13 +10,14 @@
 import numpy as np
 import pandas as pd
 
+
 def load_data(filename):
     """Loads data from a file. Handles various potential file formats."""
     try:
         # Try loading as a NumPy array directly
         return np.load(filename)
-    except ValueError:  
-        # File might be CSV or have mixed delimiters; use pandas for flexibility 
+    except ValueError:
+        # File might be CSV or have mixed delimiters; use pandas for flexibility
         return pd.read_csv(filename, header=None).to_numpy()
 
 
