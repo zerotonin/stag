@@ -23,7 +23,13 @@
 #SBATCH --output=logs/silh_ext_%A_%a.out
 #SBATCH --error=logs/silh_ext_%A_%a.err
 
-source "$(dirname "${BASH_SOURCE[0]:-$0}")/env.sh"
+# SLURM copies the script to /var/spool/slurmd/<job>/ and runs it from
+# there, so $0 / BASH_SOURCE point at the spool copy.  Use SLURM_SUBMIT_DIR
+# (the path from which sbatch was invoked - in our case the STAG project
+# root) to find env.sh and to anchor every relative path below.
+cd "${SLURM_SUBMIT_DIR}"
+# shellcheck disable=SC1091
+source slurm/env.sh
 
 set -euo pipefail
 mkdir -p logs
