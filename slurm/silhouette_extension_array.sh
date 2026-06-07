@@ -17,8 +17,8 @@
 #SBATCH --partition=aoraki
 #SBATCH --array=0-23
 #SBATCH --cpus-per-task=32
-#SBATCH --mem=64G
-#SBATCH --time=01:00:00
+#SBATCH --mem=128G
+#SBATCH --time=01:30:00
 #SBATCH --job-name=silh_ext
 #SBATCH --output=logs/silh_ext_%A_%a.out
 #SBATCH --error=logs/silh_ext_%A_%a.err
@@ -54,14 +54,25 @@ mkdir -p "${TABLES_DIR}"
 
 OUT_CSV="${TABLES_DIR}/silhouette_ext_delSize${DELSIZE}_k${K}.csv"
 
+# ─── Resume check — skip if this (delSize, k) already has output ────
+# Makes the script idempotent: re-running `sbatch --array=0-23` after
+# a partial completion only burns nodes on the tasks that still need
+# data.  Combined with submit_silhouette_extension.sh's missing-task
+# scan, you can fire-and-forget until the whole grid is filled in.
+if [[ -s "${OUT_CSV}" ]] && \
+   [[ "$(wc -l < "${OUT_CSV}")" -ge 2 ]]; then
+    echo "── Already done: ${OUT_CSV} exists with at least one data row, skipping. ──"
+    exit 0
+fi
+
 # ─── Drive the single-task silhouette pass ──────────────────────────
 "${STAG_HPC_CPU_PY}" -m scripts.silhouette_elbow_4reductions \
     --meta-dir "${STAG_HPC_DATA_ROOT}/cluster_results/deer6raw" \
     --data-file "${STAG_HPC_DATA_ROOT}/clust_data_maxabs_6col.npy" \
     --inertia-csv results/figures/figure2_internal_metrics_4reductions.csv \
     --output-dir results/sprint1 \
-    --silhouette-per-cluster 5000 \
-    --silhouette-repeats 5 \
+    --silhouette-per-cluster 2000 \
+    --silhouette-repeats 10 \
     --only-delsize "${DELSIZE}" \
     --only-k "${K}" \
     --csv-only \
