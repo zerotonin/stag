@@ -1,7 +1,8 @@
 import os
-import pandas as pd
+
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 
 from stag.local_paths import get_path
 
@@ -37,11 +38,19 @@ with open(correlation_file, 'w') as f:
         if filename.endswith('.h5'):
             filepath = os.path.join(directory, filename)
             key = "df"  # Assuming the key to read from is always "df"
-            
+
             # Read the h5 file
             all_accell = pd.read_hdf(filepath, key=key)
-            all_accell[['X_head', 'Y_head', 'Z_head']] = (all_accell[['X_head', 'Y_head', 'Z_head']] - all_accell[['X_head', 'Y_head', 'Z_head']].mean()) / all_accell[['X_head', 'Y_head', 'Z_head']].std()
-            all_accell[['X_ear', 'Y_ear', 'Z_ear']] = (all_accell[['X_ear', 'Y_ear', 'Z_ear']] - all_accell[['X_ear', 'Y_ear', 'Z_ear']].mean()) / all_accell[['X_ear', 'Y_ear', 'Z_ear']].std()
+            head_cols = ["X_head", "Y_head", "Z_head"]
+            ear_cols  = ["X_ear", "Y_ear", "Z_ear"]
+            all_accell[head_cols] = (
+                (all_accell[head_cols] - all_accell[head_cols].mean())
+                / all_accell[head_cols].std()
+            )
+            all_accell[ear_cols] = (
+                (all_accell[ear_cols] - all_accell[ear_cols].mean())
+                / all_accell[ear_cols].std()
+            )
             # Calculate the sum of accelerometer data for the first 20000 values
             sum_head_first_20000 = all_accell[['X_head', 'Y_head', 'Z_head']].iloc[:20000].sum(axis=1)
             sum_ear_first_20000 = all_accell[['X_ear', 'Y_ear', 'Z_ear']].iloc[:20000].sum(axis=1)
@@ -56,7 +65,7 @@ with open(correlation_file, 'w') as f:
             plt.legend()
             plt.xticks(rotation=45)
             plt.tight_layout()
-            
+
             # Save the start plot
             plot_filename = extract_R_and_D(filename) + '_start.png'
             save_path = os.path.join(save_directory, plot_filename)
@@ -77,7 +86,7 @@ with open(correlation_file, 'w') as f:
             plt.legend()
             plt.xticks(rotation=45)
             plt.tight_layout()
-            
+
             # Save the end plot
             plot_filename = extract_R_and_D(filename) + '_end.png'
             save_path = os.path.join(save_directory, plot_filename)
@@ -100,14 +109,14 @@ with open(correlation_file, 'w') as f:
             plt.legend()
             plt.xticks(rotation=45)
             plt.tight_layout()
-            
+
             # Save the middle plot
             plot_filename = extract_R_and_D(filename) + '_middle.png'
             save_path = os.path.join(save_directory, plot_filename)
             plt.savefig(save_path)
             plt.close()
 
-            
+
             # Compute the sum of accelerations for each accelerometer
             sum_head = all_accell[['X_head', 'Y_head', 'Z_head']].sum(axis=1)
             sum_ear = all_accell[['X_ear', 'Y_ear', 'Z_ear']].sum(axis=1)

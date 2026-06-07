@@ -1,14 +1,19 @@
+import argparse
+import os
+
 import pandas as pd
 from Better_Data_Sync import Better_Data_Sync as ds
-import os
-import argparse
 
-def load_and_clean_data(filepath,ear=False):
+
+def load_and_clean_data(filepath, ear=False):
     if not os.path.exists(filepath):
         print(f"Error: Data file {filepath} does not exist.")
         return pd.DataFrame([])
-    if ear==False:
-        columns_to_keep=['TagID', 'Date', 'Time', 'X', 'Y', 'Z', 'location-lat','location-lon']
+    if not ear:
+        columns_to_keep = [
+            "TagID", "Date", "Time", "X", "Y", "Z",
+            "location-lat", "location-lon",
+        ]
     else:
         columns_to_keep=['TagID', 'Date', 'Time', 'X', 'Y', 'Z']
     data=pd.read_csv(filepath,usecols=columns_to_keep)
@@ -47,22 +52,21 @@ def process_data(deer_code, path_sys):
         )
 
     rawdata_folder     = get_path("aoraki_raw_data")
-    deer_code_filepath = get_path("aoraki_deer_codes")
     merged_signal_file = get_path(merged_key)
     plot_file          = get_path(plot_key)
     log_file           = get_path(log_key)
 
-    
+
     ear_data_filepath=os.path.join(rawdata_folder,deer_code+"_LE.csv")
     head_data_filepath=os.path.join(rawdata_folder,deer_code+"_LH.csv")
 
-        
+
     ear_data=load_and_clean_data(ear_data_filepath,ear=True)
     head_data=load_and_clean_data(head_data_filepath,ear=False)
-        
+
     if head_data.empty or ear_data.empty:
         raise ValueError("Could not find data for cleaning!")
-        
+
     window_dict = {
     'end_window_beginning_index_head': head_data.shape[0] - 20000,
     'end_window_end_index_head': head_data.shape[0],
@@ -72,11 +76,16 @@ def process_data(deer_code, path_sys):
     'start_window_end_index_head': 20000,
     'start_window_beginning_index_ear': 0,
     'start_window_end_index_ear': 20000
-    }      
-        
+    }
 
-        
-    syncer= ds(deer_id=deer_code,head_data=head_data,ear_data=ear_data,window_dict=window_dict,log=True,log_folder=log_file,mkplot=True,plot_folder=plot_file)
+
+
+    syncer = ds(
+        deer_id=deer_code, head_data=head_data, ear_data=ear_data,
+        window_dict=window_dict,
+        log=True, log_folder=log_file,
+        mkplot=True, plot_folder=plot_file,
+    )
     syncer.find_signal_match()
     syncer.interpolate_and_save_signal(merged_signal_file)
 
@@ -86,9 +95,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process deer data.")
     parser.add_argument("deer_code", type=str, help="Deer code to process")
     parser.add_argument("path_sys", type=str, help="Path system to use (e.g., 'alex_paths', 'bart_paths')")
-    
+
     args = parser.parse_args()
 
     process_data(args.deer_code, args.path_sys)
-    
+
 # python your_script_name.py DEERCODE PATHSYSTEM
