@@ -73,3 +73,8 @@ stag/embedded/benchmark/xtensa/results_xtensa.csv
 # Machine-specific path configuration (each developer fills in
 # local_paths.json from local_paths.template.json; never commit it).
 local_paths.json
+
+# Per-cluster SLURM environment file (each cluster fills slurm/env.sh
+# from slurm/env.template.sh; never commit it - it carries lab-
+# specific absolute paths).
+slurm/env.sh

@@ -3,9 +3,9 @@
 source "$(dirname "${BASH_SOURCE[0]:-$0}")/env.sh"
 
 python_interpreter="${STAG_HPC_CPU_PY}"
-data_folder="${STAG_HPC_AORAKI_MERGED_SIGNALS_V2}"
+data_folder="${STAG_HPC_MERGED_SIGNALS_V2}"
 python_script="${STAG_HPC_PROJECT_DIR}/DeerInfo.py"
-engine_url="sqlite:///${STAG_HPC_AORAKI_DB_FOLDER}/deer_data.db"
+engine_url="sqlite:///${STAG_HPC_DB_FOLDER}/deer_data.db"
 
 for filename in "${data_folder}"*.h5; do
     base_filename=$(basename "${filename}" .h5)
