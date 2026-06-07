@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 import csv
+import os
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -144,15 +145,25 @@ figure palette and supersede any Wong-derived category palette.
 """
 
 PM_CATEGORY_COLOURS: dict[str, str] = {
-    "inactive":  PM_COLOURS[1],   # representative: Resting
-    "grazing":   PM_COLOURS[7],   # representative: Stationary grazing
-    "ear_flick": PM_COLOURS[2],   # all three share this colour
+    "inactive":  "#3F7FB5",   # blue
+    "grazing":   "#4E8C3A",   # green
+    "ear_flick": "#D96828",   # orange
 }
-"""Per-category representative colour (derived from :data:`PM_COLOURS`).
+"""Per-behavioural-family colour swatch — lab canonical palette.
 
-Use :data:`PM_COLOURS` for per-PM plotting; this dict is for category-
-level legends and category-grouped bar charts where one swatch per
-family is wanted.
+These three colours are the agreed-upon family swatches for every
+figure that groups the eight PMs into their behavioural families
+(Inactive = PM 0 + PM 1 + PM 3, Grazing = PM 6 + PM 7, Ear flick =
+PM 2 + PM 4 + PM 5).  They are deliberately *not* derived from
+:data:`PM_COLOURS` (which uses the Wong palette for per-PM plotting):
+the family-level chart asks a different question (three families,
+not eight prototypes) and the lab uses a distinct palette to make
+that distinction visually obvious in posters, slides, and the
+manuscript figures.
+
+Use :data:`PM_COLOURS` for per-PM plotting; use this dict for
+category-level legends and category-grouped bar charts where one
+swatch per family is wanted.
 """
 
 
@@ -209,14 +220,26 @@ TABLES_SUBDIR: str = "tables"
 # corrupt).  The paths below are the ones analysis scripts default
 # to; pass --meta-dir / --data-file on the CLI to override.
 
-HCS_SOURCE_DIR: Path = Path("/mnt/hcs/DINZ_deer_post_velvetting_2024/deer_2024")
-"""Read-only network archive of the 2024 deer dataset (3.0 TB).
-Too slow for direct analysis — mirror the curated subset locally
-via ``~/PyProjects/copy_deer_data_to_local.sh``."""
+from stag.local_paths import get_path_obj as _local
 
-LOCAL_DATA_DIR: Path = Path("/media/geuba03p/DATADRIVE1/deer_2024")
+HCS_SOURCE_DIR: Path = _local(
+    "hcs_source",
+    default="<hcs_source not configured - see local_paths.template.json>",
+)
+"""Read-only network archive of the 2024 deer dataset (3.0 TB).
+Too slow for direct analysis — mirror the curated subset locally.
+Resolved by :mod:`stag.local_paths`: ``STAG_HCS_DIR`` env var,
+then ``local_paths.json`` ``hcs_source`` field, then the placeholder
+default (which will crash any downstream read with a clear path)."""
+
+LOCAL_DATA_DIR: Path = _local(
+    "data_root",
+    default="<data_root not configured - see local_paths.template.json>",
+)
 """Local working copy on the NVMe data drive.  Tier-1 footprint
-≈ 43 GB.  All path constants below are anchored here."""
+≈ 43 GB.  All path constants below are anchored here.  Resolved by
+:mod:`stag.local_paths`: ``STAG_DATA_DIR`` env var, then
+``local_paths.json`` ``data_root`` field, then placeholder default."""
 
 RAW_CLUSTERING_INPUT: Path = LOCAL_DATA_DIR / "clust_data_raw_20240412.npy"
 """Raw 8-column input the SLURM clustering actually read.
@@ -267,6 +290,25 @@ CLUSTER_RESULTS_DIR: Path = LOCAL_DATA_DIR / "cluster_results" / "deer6raw"
 produced by the Aoraki SLURM sweep.  Per-fit JSONs and centroid
 arrays are present in full; labels are present for the 24
 representative runs only."""
+
+CANONICAL_K8_LABELS: Path = (
+    CLUSTER_RESULTS_DIR / "delSize_0" / "k_8" / "labels"
+    / "deer6raw_labels_k8_delSize0_partA.npy"
+)
+"""Manuscript-aligned k=8 labels.npy (Partition A).
+
+Of the 50 fits saved at ``delSize_0/k_8``, 17 converged to the
+basin whose centroids match :data:`centroid_label_info` exactly and
+whose cluster IDs are in manuscript PM order
+(0 = Quiescent, 1 = Resting, … 7 = Stationary grazing).  None of
+those 17 had their labels mirrored from the original sweep, so
+this file is regenerated locally by nearest-manuscript-centroid
+assignment on :data:`MAXABS_CLUSTERING_INPUT` — bit-equivalent to
+the converged k-means assignment for that basin, prevalences match
+the manuscript table to within 0.013 % per PM.
+
+Use this constant — not a glob of the labels directory — wherever
+downstream code wants "the k=8 labels."""
 
 
 def save_figure(
