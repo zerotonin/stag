@@ -132,13 +132,18 @@ inertia curve, and renders the four-panel Figure 2 plus a one-row
 ### 4. External validation against video annotations
 
 ```bash
-python scripts/run_external_validation.py            # → results/sprint2/
+python scripts/analyse_groundtruthing_register.py <register.csv>
 ```
 
-Loads every groundtruthing register found under `data/annotations/`,
-computes the confusion matrix, ARI and NMI against the k = 8 labels,
-and runs the 1 000-bootstrap sub-human test. Writes a Markdown report
-and the underlying CSVs alongside Figure 3.
+Parses the observer's free-text `Behaviour` column from a DINZ
+groundtruthing register into a canonical 15-token behavioural
+vocabulary, computes per-prototype agreement with Wilson 95 % CIs, and
+renders the cluster × token confusion matrix and the PM × PM external
+confusion matrix under a conditional decision rule. Writes one SVG +
+PNG + CSV trio per figure. The token-overlap framing is robust to
+cluster-ID drift between historical k-means fits, which is why this
+script — not a Hungarian-aligned ARI / NMI pipeline — is the
+canonical external-validation tool.
 
 ### 5. Sequence statistics (super-prototypes, circadian, ear-flick)
 
@@ -203,11 +208,22 @@ at a 10× margin.
 
 <sub>‡ Renode `cpu ExecutedInstructions`, single-issue — silicon will be the same or faster. † Cortex-M7's dual-issue pipeline typically realises ≈ 1.3 IPC on integer workloads; RT106x silicon throughput exceeds the reported value by an estimated 25 %. § Espressif QEMU virtual CCOUNT under `-icount shift=auto`; pipeline and cache effects not modelled. AVR rows are simavr-measured hardware cycles.</sub>
 
-<!-- ## Citation
+## Citation
 
-If you use STAG in your research, please cite:
+If you use STAG in your research, please cite the software and the
+accompanying journal article:
 
 ```bibtex
+@misc{matthews2026stag_software,
+  title        = {STAG - Sensor-based Tracking and Analysis of Gait},
+  author       = {Matthews, Alexander R. H. and Matthews, Lindsay R. and
+                  Geurten, Bart R. H.},
+  year         = {2026},
+  doi          = {10.5281/zenodo.19106434},
+  url          = {https://doi.org/10.5281/zenodo.19106434},
+  note         = {Concept DOI - resolves to the latest version on Zenodo}
+}
+
 @article{matthews2026stag,
   title   = {Behavioural Phenotyping in Red Deer: Machine Learning
              Classification of Accelerometer Data from Micro-Movements
@@ -217,9 +233,12 @@ If you use STAG in your research, please cite:
   journal = {Computers and Electronics in Agriculture},
   year    = {2026}
 }
-``` -->
+```
 
-See also [`CITATION.cff`](CITATION.cff) for machine-readable citation metadata.
+See also [`CITATION.cff`](CITATION.cff) for machine-readable citation
+metadata.  Each tagged release is archived on Zenodo with its own
+version-specific DOI; cite the version DOI for reproducibility, or the
+concept DOI above to always resolve to the latest release.
 
 ## License
 
