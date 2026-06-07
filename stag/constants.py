@@ -15,11 +15,12 @@
 from __future__ import annotations
 
 import csv
-import os
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import matplotlib.pyplot as plt
+
+from stag.local_paths import get_path_obj as _local
 
 if TYPE_CHECKING:
     from matplotlib.figure import Figure
@@ -219,8 +220,6 @@ TABLES_SUBDIR: str = "tables"
 # for the full file map (what is canonical, derived, legacy, or
 # corrupt).  The paths below are the ones analysis scripts default
 # to; pass --meta-dir / --data-file on the CLI to override.
-
-from stag.local_paths import get_path_obj as _local
 
 HCS_SOURCE_DIR: Path = _local(
     "hcs_source",
