@@ -1,14 +1,17 @@
 #!/bin/bash
+# Cluster-specific batch script for the Otago Aoraki HPC; paths reflect that environment.
+source "$(dirname "${BASH_SOURCE[0]:-$0}")/env.sh"
+
 
 # Define paths and parameters
-JSON_FILE_PATH="/projects/sciences/zoology/geurten_lab/deer_2024/cluster_results/deer5_2/centroid_label_info.json"
-PYTHON_SCRIPT_PATH="/home/geuba03p/PyProjects/headshake_project/DeerInfo.py"
-ENVIRONMENT_PATH="/home/geuba03p/miniconda3/envs/deer_project_2/bin/python"  # Path to the Python environment if needed
+JSON_FILE_PATH="${STAG_HPC_DATA_ROOT}/cluster_results/deer5_2/centroid_label_info.json"
+PYTHON_SCRIPT_PATH="${STAG_HPC_PROJECT_DIR}/DeerInfo.py"
+ENVIRONMENT_PATH="${STAG_HPC_CPU_PY}"  # Path to the Python environment if needed
 
 # Submit Slurm job for 'tortuosity'
 sbatch <<EOF
 #!/bin/bash
-#SBATCH --account=geuba03p
+#SBATCH --account=${STAG_HPC_USER}
 #SBATCH --partition=aoraki
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
@@ -25,7 +28,7 @@ sleep 2
 # Submit Slurm job for 'abs_speed_mPs'
 sbatch <<EOF
 #!/bin/bash
-#SBATCH --account=geuba03p
+#SBATCH --account=${STAG_HPC_USER}
 #SBATCH --partition=aoraki
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1

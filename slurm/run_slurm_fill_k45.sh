@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Cluster-specific batch script for the Otago Aoraki HPC; paths reflect that environment.
+source "$(dirname "${BASH_SOURCE[0]:-$0}")/env.sh"
+
 # ─────────────────────────────────────────────────────────────────────
 #  Close the k=45 hole on the Aoraki HPC cluster
 #
@@ -22,9 +25,9 @@
 #
 #  Pre-flight (see the checklist printed to stderr when this script
 #  is run with no arguments):
-#    1. The post-revision STAG repo at /home/geuba03p/PyProjects/stag
+#    1. The post-revision STAG repo at ${STAG_HPC_PROJECT_DIR}
 #    2. The pre-processed MaxAbs-scaled 6-col feature matrix at
-#       /projects/sciences/zoology/geurten_lab/deer_2024/clust_data_maxabs_6col.npy
+#       ${STAG_HPC_DATA_ROOT}/clust_data_maxabs_6col.npy
 #       (produced by scripts/preprocess_clustering_data.py — matches the
 #       2024 SLURM pipeline's MaxAbsScaler + col-5 ±7.99 clip exactly)
 #    3. A writable cluster_results directory at the path below
@@ -46,9 +49,9 @@ if [[ "${1:-}" == "--check" ]]; then
 
   Pre-flight checklist for Aoraki (login host: aoraki-login)
   ──────────────────────────────────────────────────────────────────
-   STAG package        : /home/geuba03p/PyProjects/stag/
-   Data file           : /projects/sciences/zoology/geurten_lab/deer_2024/clust_data_maxabs_6col.npy
-   Results root        : /projects/sciences/zoology/geurten_lab/deer_2024/cluster_results/
+   STAG package        : ${STAG_HPC_PROJECT_DIR}/
+   Data file           : ${STAG_HPC_DATA_ROOT}/clust_data_maxabs_6col.npy
+   Results root        : ${STAG_HPC_DATA_ROOT}/cluster_results/
    Conda env           : rapids-24.02
    GPU partitions      : aoraki_gpu_H100, aoraki_gpu_L40, aoraki_gpu (A100s)
 
@@ -61,11 +64,11 @@ if [[ "${1:-}" == "--check" ]]; then
   exercise the GPU stack on whichever partition SLURM scheduled
   the job on (libcuda.so.1 is present on all GPU partitions).
 
-   ls -la /home/geuba03p/PyProjects/stag/stag/clustering/kmeans.py
-   ls -la /projects/sciences/zoology/geurten_lab/deer_2024/clust_data_maxabs_6col.npy
+   ls -la ${STAG_HPC_PROJECT_DIR}/stag/clustering/kmeans.py
+   ls -la ${STAG_HPC_DATA_ROOT}/clust_data_maxabs_6col.npy
 
    # CPU-only import check (safe on aoraki-login):
-   /home/geuba03p/miniconda3/envs/rapids-24.02/bin/python -c "
+   ${STAG_HPC_CONDA_PY} -c "
    import stag
    import pandas as pd
    print('stag', stag.__version__)
@@ -76,9 +79,9 @@ if [[ "${1:-}" == "--check" ]]; then
   If you really want a belt-and-braces GPU-stack check, grab a brief
   interactive GPU node:
 
-   srun --account=geuba03p --partition=aoraki_gpu_H100,aoraki_gpu_L40,aoraki_gpu \
+   srun --account=${STAG_HPC_USER} --partition=aoraki_gpu_H100,aoraki_gpu_L40,aoraki_gpu \
         --gpus-per-task=1 --mem=16GB --time=00:05:00 --pty bash
-   /home/geuba03p/miniconda3/envs/rapids-24.02/bin/python -c "
+   ${STAG_HPC_CONDA_PY} -c "
    import cupy, cuml
    from cuml.cluster import KMeans
    print('cupy', cupy.__version__, 'cuml', cuml.__version__)
@@ -90,16 +93,16 @@ CHK
 fi
 
 # ─── Configuration ────────────────────────────────────────────────────
-CONDA_PY="/home/geuba03p/miniconda3/envs/rapids-24.02/bin/python"
-STAG_PATH="/home/geuba03p/PyProjects/stag"
+CONDA_PY="${STAG_HPC_CONDA_PY}"
+STAG_PATH="${STAG_HPC_PROJECT_DIR}"
 
-DATA_FILE="/projects/sciences/zoology/geurten_lab/deer_2024/clust_data_maxabs_6col.npy"
-RESULT_DIR="/projects/sciences/zoology/geurten_lab/deer_2024/cluster_results/"
+DATA_FILE="${STAG_HPC_DATA_ROOT}/clust_data_maxabs_6col.npy"
+RESULT_DIR="${STAG_HPC_DATA_ROOT}/cluster_results/"
 
 # Comma-separated partition list lets SLURM dispatch to whichever
 # GPU queue clears first.  Order matters only as a tie-breaker —
 # H100 is fastest at k=45 (~5 min), L40 ≈ A100 ≈ 8-10 min.
-SLURM_PARAMS="--account=geuba03p \
+SLURM_PARAMS="--account=${STAG_HPC_USER} \
               --partition=aoraki_gpu_H100,aoraki_gpu_L40,aoraki_gpu \
               --nodes=1 \
               --ntasks-per-node=1 \

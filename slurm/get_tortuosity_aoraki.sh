@@ -1,6 +1,9 @@
 #!/bin/bash
+# Cluster-specific batch script for the Otago Aoraki HPC; paths reflect that environment.
+source "$(dirname "${BASH_SOURCE[0]:-$0}")/env.sh"
+
 # Path to the CSV file containing deer codes
-DEER_CODES_FILE="/projects/sciences/zoology/geurten_lab/Deer_codes.csv"
+DEER_CODES_FILE="${STAG_HPC_DEER_CODES}"
 
 while IFS= read -r line; do
     deer_code=$(echo "$line" | tr -d '\r\n')
@@ -13,7 +16,7 @@ while IFS= read -r line; do
 #SBATCH --mem=4GB
 #SBATCH --cpus-per-task=1
 #SBATCH --job-name=deer_analysis${deer_code}  # Set a unique job name for each analysis
-~/miniconda3/envs/deer_project_2/bin/python /home/matal178/PyProjects/headshake_project/headshake_project/get_tortuosity_for_aoraki.py "$deer_code" "cluster_paths_2"
+~/miniconda3/envs/deer_project_2/bin/python ${STAG_HPC_ALEX_PROJECT_DIR}/scripts/get_tortuosity_for_aoraki.py "$deer_code" "cluster_paths_2"
 EOF
 done < "$DEER_CODES_FILE"
 

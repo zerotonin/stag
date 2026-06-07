@@ -1,5 +1,8 @@
 #!/bin/bash
-#SBATCH --account=geuba03p
+# Cluster-specific batch script for the Otago Aoraki HPC; paths reflect that environment.
+source "$(dirname "${BASH_SOURCE[0]:-$0}")/env.sh"
+
+#SBATCH --account=${STAG_HPC_USER}
 #SBATCH --partition=aoraki
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
@@ -7,4 +10,4 @@
 #SBATCH --cpus-per-task=1
 #SBATCH --job-name=vid_availability  # Unique job name using the h5 file basename
 
-~/miniconda3/envs/deer_project_2/bin/python /home/geuba03p/PyProjects/headshake_project/DeerInfo.py
+~/miniconda3/envs/deer_project_2/bin/python ${STAG_HPC_PROJECT_DIR}/DeerInfo.py

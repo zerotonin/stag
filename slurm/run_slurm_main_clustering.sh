@@ -1,17 +1,20 @@
 #!/bin/bash
+# Cluster-specific batch script for the Otago Aoraki HPC; paths reflect that environment.
+source "$(dirname "${BASH_SOURCE[0]:-$0}")/env.sh"
+
 
 # Adjusted command for generating filenames without requiring CUDA
-filename_cmd="python /home/geuba03p/PyProjects/headshake_project/generate_filename.py"
+filename_cmd="python ${STAG_HPC_PROJECT_DIR}/generate_filename.py"
 
 # Base command structure for clustering, requiring CUDA
-base_cmd="/home/geuba03p/miniconda3/envs/rapids-24.02/bin/python /home/geuba03p/PyProjects/headshake_project/clustering_script.py"
+base_cmd="${STAG_HPC_CONDA_PY} ${STAG_HPC_PROJECT_DIR}/clustering_script.py"
 
 # Root directory for data and results
-data_file="/projects/sciences/zoology/geurten_lab/deer_2024/clust_data_deer8.npy"
-result_dir="/projects/sciences/zoology/geurten_lab/deer_2024/cluster_results/"
+data_file="${STAG_HPC_DATA_ROOT}/clust_data_deer8.npy"
+result_dir="${STAG_HPC_DATA_ROOT}/cluster_results/"
 
 # SLURM job parameters for readability, updated partition
-slurm_params="--account=geuba03p --partition=aoraki_gpu --nodes=1 --ntasks-per-node=1 --gpus-per-task=1 --mem=64GB"
+slurm_params="--account=${STAG_HPC_USER} --partition=aoraki_gpu --nodes=1 --ntasks-per-node=1 --gpus-per-task=1 --mem=64GB"
 
 # Order of execution for deletion sizes
 declare -a execution_order=(0 50 25 10)

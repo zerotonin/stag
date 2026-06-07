@@ -1,7 +1,10 @@
 #!/bin/bash
+# Cluster-specific batch script for the Otago Aoraki HPC; paths reflect that environment.
+source "$(dirname "${BASH_SOURCE[0]:-$0}")/env.sh"
+
 
 # Directory containing .h5 files
-H5_FILES_DIR="/projects/sciences/zoology/geurten_lab/deer_2024/files_extracted/sync_file_results/data"
+H5_FILES_DIR="${STAG_HPC_DATA_ROOT}/files_extracted/sync_file_results/data"
 
 # Initialize a variable to hold the job ID of the last submitted job
 last_job_id=""
@@ -16,7 +19,7 @@ for h5_file in "${H5_FILES_DIR}"/*.h5; do
         # Submit the job with a dependency on the last job's successful completion
         job_output=$(sbatch --dependency=afterok:$last_job_id <<EOF
 #!/bin/bash
-#SBATCH --account=geuba03p
+#SBATCH --account=${STAG_HPC_USER}
 #SBATCH --partition=aoraki
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
@@ -25,14 +28,14 @@ for h5_file in "${H5_FILES_DIR}"/*.h5; do
 #SBATCH --job-name=gps_ana_$h5_basename  # Unique job name using the h5 file basename
 #SBATCH --output=%x_%j.out  # Save output to a file based on the job name and job ID
 
-~/miniconda3/envs/deer_project_2/bin/python /home/geuba03p/PyProjects/headshake_project/GPSAnalysis.py "/projects/sciences/zoology/geurten_lab/deer_2024/deer_data.db" "$h5_file"
+~/miniconda3/envs/deer_project_2/bin/python ${STAG_HPC_PROJECT_DIR}/GPSAnalysis.py "${STAG_HPC_DATA_DB}" "$h5_file"
 EOF
 )
     else
         # Submit the first job without any dependency
         job_output=$(sbatch <<EOF
 #!/bin/bash
-#SBATCH --account=geuba03p
+#SBATCH --account=${STAG_HPC_USER}
 #SBATCH --partition=aoraki
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
@@ -41,7 +44,7 @@ EOF
 #SBATCH --job-name=gps_ana_$h5_basename  # Unique job name using the h5 file basename
 #SBATCH --output=%x_%j.out  # Save output to a file based on the job name and job ID
 
-~/miniconda3/envs/deer_project_2/bin/python /home/geuba03p/PyProjects/headshake_project/GPSAnalysis.py "/projects/sciences/zoology/geurten_lab/deer_2024/deer_data.db" "$h5_file"
+~/miniconda3/envs/deer_project_2/bin/python ${STAG_HPC_PROJECT_DIR}/GPSAnalysis.py "${STAG_HPC_DATA_DB}" "$h5_file"
 EOF
 )
     fi

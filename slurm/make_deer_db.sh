@@ -1,8 +1,11 @@
 #!/bin/bash
-python_interpreter='/home/geuba03p/miniconda3/envs/deer_project_2/bin/python'
-data_folder='/projects/sciences/zoology/geurten_lab/files_extracted/new_file_sync/data/'
-python_script="/home/geuba03p/PyProjects/headshake_project/DeerInfo.py"
-engine_url="sqlite:///projects/sciences/zoology/geurten_lab/files_extracted/new_file_sync/deer_data.db"
+# Cluster-specific batch script for the Otago Aoraki HPC; paths reflect that environment.
+source "$(dirname "${BASH_SOURCE[0]:-$0}")/env.sh"
+
+python_interpreter="${STAG_HPC_CPU_PY}"
+data_folder="${STAG_HPC_AORAKI_MERGED_SIGNALS_V2}"
+python_script="${STAG_HPC_PROJECT_DIR}/DeerInfo.py"
+engine_url="sqlite:///${STAG_HPC_AORAKI_DB_FOLDER}/deer_data.db"
 
 for filename in "${data_folder}"*.h5; do
     base_filename=$(basename "${filename}" .h5)

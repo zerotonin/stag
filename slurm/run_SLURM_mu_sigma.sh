@@ -1,9 +1,12 @@
 #!/bin/bash
+# Cluster-specific batch script for the Otago Aoraki HPC; paths reflect that environment.
+source "$(dirname "${BASH_SOURCE[0]:-$0}")/env.sh"
+
 #SBATCH --job-name=clust_go1
-#SBATCH --account=geuba03p
+#SBATCH --account=${STAG_HPC_USER}
 #SBATCH --partition=aoraki
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --mem=64GB
 
- /home/geuba03p/miniconda3/envs/rapids-24.02/bin/python /home/geuba03p/PyProjects/headshake_project/getMuSigmaForZscore.py
+ ${STAG_HPC_CONDA_PY} ${STAG_HPC_PROJECT_DIR}/getMuSigmaForZscore.py
