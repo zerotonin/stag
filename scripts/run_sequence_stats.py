@@ -46,13 +46,10 @@ from stag.analysis.circadian import (
     split_by_day,
 )
 from stag.analysis.super_prototypes import (
-    bout_stream,
-    identify_super_prototypes,
     per_animal_bout_streams,
 )
 from stag.constants import (
     CANONICAL_K8_LABELS,
-    CLUSTER_RESULTS_DIR,
     LABEL_TIMELINE_DEER_IDS,
     LABEL_TIMELINE_TIMESTAMPS,
     PM_CATEGORY,
@@ -144,8 +141,8 @@ def main() -> None:
         start = rng.integers(0, bout_labels.size - args.max_bouts)
         bout_labels_test = bout_labels[start:start + args.max_bouts]
         print(f"  capping bout sequence at {args.max_bouts:,} (random contiguous slice)")
-        print(f"  super-prototype test runs on the cap (both observed AND null) "
-              f"so the comparison is apples-to-apples")
+        print("  super-prototype test runs on the cap (both observed AND null) "
+              "so the comparison is apples-to-apples")
     else:
         bout_labels_test = bout_labels
 
@@ -155,7 +152,9 @@ def main() -> None:
     # count by (full / cap) and produce a spurious "super-prototype"
     # call on essentially every triplet.
     from stag.analysis.null_models import (
-        flag_significant_ngrams, ngram_frequencies, null_distribution,
+        flag_significant_ngrams,
+        ngram_frequencies,
+        null_distribution,
     )
     n_states = max(int(bout_labels.max()) + 1, max(pm_ids) + 1)
     observed = ngram_frequencies(bout_labels_test, n=3, n_states=n_states)
