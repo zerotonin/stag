@@ -1,12 +1,14 @@
 cff-version: 1.2.0
 title: >-
-  STAG — Sensor-based Tracking and Analysis of Gait
+  STAG - Sensor-based Tracking and Analysis of Gait
 message: >-
   If you use this software, please cite both the software and the
   accompanying journal article.
 type: software
 license: MIT
 repository-code: "https://github.com/zerotonin/stag"
+url: "https://doi.org/10.5281/zenodo.19106434"
+doi: "10.5281/zenodo.19106434"
 version: "0.2.0"
 date-released: "2026-05-11"
 
