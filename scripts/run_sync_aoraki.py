@@ -19,48 +19,38 @@ def load_and_clean_data(filepath,ear=False):
 
 
 def process_data(deer_code, path_sys):
+    """Run the sync pipeline for one deer.
 
-    paths = {
-        "alex_paths": {
-            "rawdata_folder": r'C:\Users\Lindsay\Documents\alexander\Deer_project\deer_code\all_raw_data',
-            "deer_code_filepath": r'C:\Users\Lindsay\Documents\alexander\Deer_project\deer_code\Deer_codes.csv',
-            "merged_signal_file": r'C:\Users\Lindsay\Documents\alexander\Deer_project\deer_code\normalised_calibration\data_out',
-            "plot_file": r'C:\Users\Lindsay\Documents\alexander\Deer_project\deer_code\normalised_calibration\plots_nc',
-            "log_file": r"C:\Users\Lindsay\Documents\alexander\Deer_project\deer_code\normalised_calibration\logs"
-        },
-        "bart_paths": {
-            # Bart's paths
-            "rawdata_folder": r'',
-            "deer_code_filepath": r'',
-            "merged_signal_file": r'',
-            "plot_file": r'',
-            "log_file": r""
-        },
-        "cluster_paths": {
-            # Cluster's paths
-            "rawdata_folder": r'/projects/sciences/zoology/geurten_lab/files_extracted/raw_data/',
-            "deer_code_filepath": r'/projects/sciences/zoology/geurten_lab/files_extracted/Deer_codes.csv',
-            "merged_signal_file": r'/projects/sciences/zoology/geurten_lab/files_extracted/sync_file_results/data/',
-            "plot_file": r'/projects/sciences/zoology/geurten_lab/files_extracted/sync_file_results/plots/',
-            "log_file": r"/projects/sciences/zoology/geurten_lab/files_extracted/sync_file_results/logs/"
-        },
-        "cluster_paths_2": {
-            # Cluster's paths
-            "rawdata_folder": r'/projects/sciences/zoology/geurten_lab/files_extracted/raw_data/',
-            "deer_code_filepath": r'/projects/sciences/zoology/geurten_lab/files_extracted/Deer_codes.csv',
-            "merged_signal_file": r'/projects/sciences/zoology/geurten_lab/files_extracted/new_file_sync/data/',
-            "plot_file": r'/projects/sciences/zoology/geurten_lab/files_extracted/new_file_sync/plots/',
-            "log_file": r"//projects/sciences/zoology/geurten_lab/files_extracted/new_file_sync/logs/"
-        }
-        # You can add more path sets as needed
-    }
+    ``path_sys`` selects which Aoraki signal directory to write to:
+      - ``"cluster_paths"``    -> the legacy sync_file_results/ tree
+      - ``"cluster_paths_2"``  -> the active new_file_sync/ tree
 
+    Both sets of paths are resolved by :mod:`stag.local_paths`; the
+    previous multi-machine inline dict (alex_paths / bart_paths /
+    cluster_paths / cluster_paths_2 with absolute Windows + Linux
+    paths) is gone.
+    """
+    from stag.local_paths import get_path
 
-    rawdata_folder     = paths[path_sys]['rawdata_folder']
-    deer_code_filepath = paths[path_sys]['deer_code_filepath']
-    merged_signal_file = paths[path_sys]['merged_signal_file']
-    plot_file          = paths[path_sys]['plot_file']
-    log_file           = paths[path_sys]['log_file']
+    if path_sys == "cluster_paths":
+        merged_key = "aoraki_merged_signals"
+        plot_key   = "aoraki_plot_dir"
+        log_key    = "aoraki_log_dir"
+    elif path_sys == "cluster_paths_2":
+        merged_key = "aoraki_merged_signals_v2"
+        plot_key   = "aoraki_plot_dir_v2"
+        log_key    = "aoraki_log_dir_v2"
+    else:
+        raise ValueError(
+            f"unknown path_sys {path_sys!r}; expected 'cluster_paths' "
+            "or 'cluster_paths_2'",
+        )
+
+    rawdata_folder     = get_path("aoraki_raw_data")
+    deer_code_filepath = get_path("aoraki_deer_codes")
+    merged_signal_file = get_path(merged_key)
+    plot_file          = get_path(plot_key)
+    log_file           = get_path(log_key)
 
     
     ear_data_filepath=os.path.join(rawdata_folder,deer_code+"_LE.csv")

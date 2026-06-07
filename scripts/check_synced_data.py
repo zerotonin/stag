@@ -3,55 +3,24 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 
-paths = {
-    "alex_paths": {
-        "rawdata_folder": r'C:\Users\Lindsay\Documents\alexander\Deer_project\deer_code\all_raw_data',
-        "deer_code_filepath": r'C:\Users\Lindsay\Documents\alexander\Deer_project\deer_code\Deer_codes.csv',
-        "merged_signal_file": r'C:\Users\Lindsay\Documents\alexander\Deer_project\deer_code\normalised_calibration\data_out',
-        "plot_file": r'C:\Users\Lindsay\Documents\alexander\Deer_project\deer_code\normalised_calibration\plots_nc',
-        "log_file": r"C:\Users\Lindsay\Documents\alexander\Deer_project\deer_code\normalised_calibration\logs"
-    },
-    "bart_paths": {
-        # Bart's paths
-        "rawdata_folder": r'',
-        "deer_code_filepath": r'',
-        "merged_signal_file": r'',
-        "plot_file": r'',
-        "log_file": r""
-    },
-    "cluster_paths": {
-        # Cluster's paths
-        "rawdata_folder": r'/projects/sciences/zoology/geurten_lab/files_extracted/raw_data/',
-        "deer_code_filepath": r'/projects/sciences/zoology/geurten_lab/files_extracted/Deer_codes.csv',
-        "merged_signal_file": r'/projects/sciences/zoology/geurten_lab/files_extracted/sync_file_results/data/',
-        "plot_file": r'/projects/sciences/zoology/geurten_lab/files_extracted/sync_file_results/plots/',
-        "log_file": r"/projects/sciences/zoology/geurten_lab/files_extracted/sync_file_results/logs/"
-    },
-    "cluster_paths_2": {
-        # Cluster's paths
-        "rawdata_folder": r'/projects/sciences/zoology/geurten_lab/files_extracted/raw_data/',
-        "deer_code_filepath": r'/projects/sciences/zoology/geurten_lab/files_extracted/Deer_codes.csv',
-        "merged_signal_file": r'/projects/sciences/zoology/geurten_lab/files_extracted/new_file_sync/data/',
-        "plot_file": r'/projects/sciences/zoology/geurten_lab/files_extracted/new_file_sync/plots/',
-        "log_file": r"//projects/sciences/zoology/geurten_lab/files_extracted/new_file_sync/logs/"
-    }
-    # You can add more path sets as needed
-}
-path_sys="cluster_paths_2"
+from stag.local_paths import get_path
 
-rawdata_folder     = paths[path_sys]['rawdata_folder']
-deer_code_filepath = paths[path_sys]['deer_code_filepath']
-merged_signal_file = paths[path_sys]['merged_signal_file']
-plot_file          = paths[path_sys]['plot_file']
-log_file           = paths[path_sys]['log_file']
+# Every path was previously held in a multi-machine dictionary
+# (alex_paths / bart_paths / cluster_paths / cluster_paths_2) with
+# absolute Windows + Linux paths hardcoded inline.  All of that is
+# now in local_paths.json - one source of truth per machine.
+rawdata_folder     = get_path("aoraki_raw_data")
+deer_code_filepath = get_path("aoraki_deer_codes")
+merged_signal_file = get_path("aoraki_merged_signals_v2")
+plot_file          = get_path("aoraki_plot_dir_v2")
+log_file           = get_path("aoraki_log_dir_v2")
+
 # Define the directory where your h5 files are located
 directory = merged_signal_file
 
-# Define the directory to save the plots
-save_directory = r'/projects/sciences/zoology/geurten_lab/files_extracted/new_file_sync/quality_control/'
-
-
-correlation_file = r'/projects/sciences/zoology/geurten_lab/files_extracted/new_file_sync/quality_control/correlations.txt'
+# Quality-control output directory + correlations file.
+save_directory   = get_path("aoraki_quality_control_dir")
+correlation_file = get_path("aoraki_correlations_file")
 # Function to extract R and D numbers from filenames
 def extract_R_and_D(filename):
     parts = filename.split('_')
