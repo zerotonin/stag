@@ -47,14 +47,17 @@ def interpolate_nan_sequences(arr, nan_sequences):
         col[start:end + 1] = interp_values
 
 
-# ----- Main script -----
-filename = "/home/geuba03p/deer_accl/clust_data_raw.npy"  # Replace with the name of your data file
-data = load_data(filename)
+if __name__ == "__main__":
+    import argparse
 
-nan_sequences = find_nan_sequences(data)
-interpolate_nan_sequences(data, nan_sequences)
+    parser = argparse.ArgumentParser(
+        description="Interpolate NaN runs in a raw accelerometer .npy array.",
+    )
+    parser.add_argument("infile", help="Input .npy (or CSV) feature matrix.")
+    parser.add_argument("outfile", help="Output .npy with NaN runs interpolated.")
+    args = parser.parse_args()
 
-# Save the modified data (optional)
-np.save("/home/geuba03p/deer_accl/clust_data_noNAN.npy", data)
-
-print("NaN sequences interpolated.")
+    data = load_data(args.infile)
+    interpolate_nan_sequences(data, find_nan_sequences(data))
+    np.save(args.outfile, data)
+    print("NaN sequences interpolated.")
