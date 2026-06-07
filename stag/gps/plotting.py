@@ -27,8 +27,8 @@ def load_trajectory_data(csv_file):
     Returns
     -------
         - DataFrame with the trajectory data.
-        """
-        return pd.read_csv(csv_file)
+    """
+    return pd.read_csv(csv_file)
 
 def prepare_line_collection(df, x_col, y_col, start_idx=None, end_idx=None, cmap='Greys', full_length_color=None):
     """
@@ -140,9 +140,9 @@ def calculate_time_axis(df, fps=50):
     Returns
     -------
         - A NumPy array representing the time in seconds.
-        """
-        num_points = len(df)
-        return np.linspace(0, num_points / fps, num_points)
+    """
+    num_points = len(df)
+    return np.linspace(0, num_points / fps, num_points)
 
 def plot_speed_and_tortuosity_with_highlight(df, start_idx, end_idx, fps=50):
     time_seconds = calculate_time_axis(df,fps)
@@ -180,16 +180,36 @@ def plot_speed_and_tortuosity_with_highlight(df, start_idx, end_idx, fps=50):
     return fig
 
 
-# Replace the path with your actual CSV file path
-csv_file =  '/home/geuba03p/deer_accl/deer_2_trajectory.csv'  # Replace with the path to your CSV file
-df = load_trajectory_data(csv_file)
-fig_list = list()
-filename_list = ['WGS',"NZMG","NZMGF",'speed']
-extension_list = ['png','png','png','svg']
-fig_list.append(main_plot_with_closeup(df, start_idx=4000000, end_idx=4010000, coord_system='WGS',line_color='Greens'))
-fig_list.append(main_plot_with_closeup(df, start_idx=4000000, end_idx=4010000, coord_system='NZMG',line_color='Blues'))
-fig_list.append(main_plot_with_closeup(df, start_idx=4000000, end_idx=4010000, coord_system='FILT',line_color='Oranges'))
-fig_list.append(plot_speed_and_tortuosity_with_highlight(df, 4000000, 4010000))
+if __name__ == "__main__":
+    import argparse
+    from pathlib import Path
 
-for fig, fname in list(zip(fig_list,filename_list)):
-    fig.savefig(f"/home/geuba03p/deer_accl/deer_2_{fname}.png")
+    parser = argparse.ArgumentParser(
+        description="Render the WGS / NZMG / NZMG-filtered trajectory + "
+                    "speed-and-tortuosity demo figures from a GPS trajectory CSV.",
+    )
+    parser.add_argument("csv_file", help="Trajectory CSV (columns: WGS_lon, "
+                                          "WGS_lat, NZMG_x, NZMG_y, …).")
+    parser.add_argument("--outdir", default=".",
+                        help="Output directory for the four PNG figures.")
+    parser.add_argument("--start", type=int, default=4_000_000,
+                        help="Start sample index for the close-up panel.")
+    parser.add_argument("--end", type=int, default=4_010_000,
+                        help="End sample index for the close-up panel.")
+    parser.add_argument("--stem", default="deer",
+                        help="Output filename stem (default: 'deer').")
+    args = parser.parse_args()
+
+    outdir = Path(args.outdir)
+    outdir.mkdir(parents=True, exist_ok=True)
+    df = load_trajectory_data(args.csv_file)
+    figs = [
+        main_plot_with_closeup(df, args.start, args.end, "WGS",  line_color="Greens"),
+        main_plot_with_closeup(df, args.start, args.end, "NZMG", line_color="Blues"),
+        main_plot_with_closeup(df, args.start, args.end, "FILT", line_color="Oranges"),
+        plot_speed_and_tortuosity_with_highlight(df, args.start, args.end),
+    ]
+    stems = ["WGS", "NZMG", "NZMGF", "speed"]
+    for fig, stem in zip(figs, stems):
+        fig.savefig(outdir / f"{args.stem}_{stem}.png")
+    print(f"Wrote {len(figs)} figures to {outdir}/")
