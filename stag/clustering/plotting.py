@@ -229,5 +229,23 @@ def _plot_metric(
 
 
 if __name__ == "__main__":
-    plotter = CentroidDashboard("/home/geuba03p/deer_cluster/centroid_label_info.json")
-    plotter.plot_radar_and_metrics("nmax")
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description="Render the per-centroid radar dashboard from a "
+                    "centroid_label_info.json summary file.",
+    )
+    parser.add_argument(
+        "json_path",
+        help="Path to centroid_label_info.json (the manuscript's "
+             "representative-run summary).",
+    )
+    parser.add_argument(
+        "--feature-scale", default="nmax",
+        choices=("zscored", "uf", "nmax"),
+        help="Centroid coordinate system to render (default: nmax).",
+    )
+    args = parser.parse_args()
+
+    plotter = CentroidDashboard(args.json_path)
+    plotter.plot_radar_and_metrics(args.feature_scale)
