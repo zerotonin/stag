@@ -30,10 +30,12 @@ from tqdm import tqdm
 from stag.clustering.internal_metrics import compute_silhouette_stratified
 from stag.clustering.kmeans import shrink_data
 from stag.constants import (
-    CLUSTER_RESULTS_DIR, MAXABS_CLUSTERING_INPUT, RESULTS_DIR_DEFAULT,
-    apply_figure_defaults, save_figure,
+    CLUSTER_RESULTS_DIR,
+    MAXABS_CLUSTERING_INPUT,
+    RESULTS_DIR_DEFAULT,
+    apply_figure_defaults,
+    save_figure,
 )
-
 
 PALETTE: dict[int, str] = {
     0:  "#EECCC9",
@@ -60,6 +62,20 @@ def parse_args() -> argparse.Namespace:
                         help="Skip representatives with k > max-k.  Silhouette is "
                              "O(n_per_cluster² · k²) and the high-k tail dominates "
                              "runtime without adding rebuttal information.")
+    parser.add_argument("--only-delsize", type=int, default=None,
+                        help="Restrict to a single delSize value (use with "
+                             "--only-k for SLURM array task mode).")
+    parser.add_argument("--only-k", type=int, default=None,
+                        help="Restrict to a single k value (use with "
+                             "--only-delsize for SLURM array task mode).")
+    parser.add_argument("--csv-only", action="store_true",
+                        help="Skip figure rendering, emit silhouette CSV only.  "
+                             "Used in SLURM array tasks where the final figure "
+                             "is rendered by a separate merge step.")
+    parser.add_argument("--silhouette-csv-out", type=Path, default=None,
+                        help="Path for the silhouette CSV (default: "
+                             "tables/silhouette_per_delSize_k.csv).  Useful when "
+                             "running array tasks so each task emits its own file.")
     parser.add_argument("--chosen-k", type=int, default=8)
     parser.add_argument("--seed", type=int, default=0)
     return parser.parse_args()
@@ -112,6 +128,16 @@ def main() -> None:
         before = len(reps)
         reps = reps[reps["k"] <= args.max_k].reset_index(drop=True)
         print(f"  capping at k <= {args.max_k}: kept {len(reps)} of {before} reps")
+    if args.only_delsize is not None:
+        before = len(reps)
+        reps = reps[reps["delSize"] == args.only_delsize].reset_index(drop=True)
+        print(f"  restricting to delSize={args.only_delsize}: kept {len(reps)} of {before} reps")
+    if args.only_k is not None:
+        before = len(reps)
+        reps = reps[reps["k"] == args.only_k].reset_index(drop=True)
+        print(f"  restricting to k={args.only_k}: kept {len(reps)} of {before} reps")
+    if reps.empty:
+        raise SystemExit("No representative fits selected after filters; nothing to do.")
     print(f"  selected {len(reps)} representative fits "
           f"({reps['delSize'].nunique()} delSizes × "
           f"{reps['k'].nunique()} k values)")
@@ -147,10 +173,14 @@ def main() -> None:
         })
 
     sil_df = pd.DataFrame(sil_rows)
-    sil_df.to_csv(
-        tables_dir / "silhouette_per_delSize_k.csv", index=False,
-    )
-    print(f"\nWrote silhouette table: {tables_dir/'silhouette_per_delSize_k.csv'}")
+    sil_csv = args.silhouette_csv_out or (tables_dir / "silhouette_per_delSize_k.csv")
+    sil_csv.parent.mkdir(parents=True, exist_ok=True)
+    sil_df.to_csv(sil_csv, index=False)
+    print(f"\nWrote silhouette table: {sil_csv}")
+
+    if args.csv_only:
+        print("--csv-only set; skipping figure rendering.")
+        return
 
     # ─── Inertia / elbow per delSize ─────────────────────────────────
     inertia_summary = pd.read_csv(args.inertia_csv)
