@@ -204,9 +204,12 @@ def main() -> None:
                 elbows[int(ds)] = int(knee.knee)
     print(f"\nKneedle elbows per delSize: {elbows}")
 
-    # ─── Figure ──────────────────────────────────────────────────────
+    # ─── Figure — 2x1 vertical with shared x-axis ────────────────────
     apply_figure_defaults()
-    fig, (ax_sil, ax_W) = plt.subplots(1, 2, figsize=(11, 4.4))
+    fig, (ax_sil, ax_W) = plt.subplots(
+        2, 1, figsize=(7.5, 8), sharex=True,
+        gridspec_kw={"height_ratios": [1, 1]},
+    )
 
     # Silhouette overlay.
     for ds, colour in PALETTE.items():
@@ -222,7 +225,6 @@ def main() -> None:
             linewidth=1.4, label=f"delSize {ds} %",
         )
     ax_sil.set_title("(C) Silhouette per leave-out reduction")
-    ax_sil.set_xlabel("k")
     ax_sil.set_ylabel(r"Mean silhouette ($\bar{s}$)")
     ax_sil.axvline(args.chosen_k, color="black", linestyle="--",
                    linewidth=0.8, alpha=0.5)
@@ -258,9 +260,9 @@ def main() -> None:
                  linewidth=0.8, alpha=0.5)
     ax_W.legend(fontsize="x-small", loc="best", frameon=False)
 
-    for ax in (ax_sil, ax_W):
-        ax.set_xticks([2, 4, 6, 8, 10, 12, 16, 20, 25, 30, 35, 40, 45, 50])
-        ax.tick_params(axis="x", labelsize="x-small")
+    # Shared x-axis: ticks only need to be set on the bottom panel.
+    ax_W.set_xticks([2, 4, 6, 8, 10, 12, 16, 20, 25, 30, 35, 40, 45, 50])
+    ax_W.tick_params(axis="x", labelsize="x-small")
 
     fig.tight_layout()
 
