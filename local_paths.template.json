@@ -1,0 +1,25 @@
+{
+  "_description": "Machine-specific path config for STAG. Copy this file to local_paths.json (gitignored) and replace every <placeholder> with the real absolute path on this machine. Any key may also be overridden by the matching environment variable (STAG_DATA_DIR, STAG_HCS_DIR, STAG_AORAKI_*, STAG_DEER_DB_URL, etc.) - see stag/local_paths.py for the full key-to-env-var map.",
+
+  "data_root": "<absolute path to your local working copy of the deer_2024 archive>",
+  "hcs_source": "<absolute path to the HCS read-only DINZ archive mount>",
+
+  "aoraki_data_root": "<absolute path to the Aoraki project archive (typically /projects/.../deer_2024)>",
+  "aoraki_raw_data": "<absolute path to Aoraki .../files_extracted/raw_data/>",
+  "aoraki_deer_codes": "<absolute path to Aoraki .../Deer_codes.csv>",
+  "aoraki_merged_signals": "<absolute path to Aoraki .../sync_file_results/data/>",
+  "aoraki_merged_signals_v2": "<absolute path to Aoraki .../new_file_sync/data/>",
+  "aoraki_plot_dir": "<absolute path to Aoraki .../sync_file_results/plots/>",
+  "aoraki_plot_dir_v2": "<absolute path to Aoraki .../new_file_sync/plots/>",
+  "aoraki_log_dir": "<absolute path to Aoraki .../sync_file_results/logs/>",
+  "aoraki_log_dir_v2": "<absolute path to Aoraki .../new_file_sync/logs/>",
+  "aoraki_db_folder": "<absolute path to Aoraki .../new_file_sync/data/ (where make_deer_db writes deer_data.db)>",
+  "aoraki_quality_control_dir": "<absolute path to Aoraki .../new_file_sync/quality_control/>",
+  "aoraki_correlations_file": "<absolute path to Aoraki .../new_file_sync/quality_control/correlations.txt>",
+  "aoraki_loc_and_tort_dir": "<absolute path to Aoraki .../files_extracted/data_with_tortuosity/>",
+
+  "deer_db_url": "<SQLAlchemy URL for the canonical deer_data_gps.db, e.g. sqlite:////absolute/path/to/deer_data_gps.db>",
+  "deer_db_url_legacy": "<SQLAlchemy URL for the legacy deer_data.db, e.g. sqlite:////absolute/path/to/deer_data.db>",
+
+  "alex_home": "<absolute path to the co-author's HPC home directory, if reproducing the original Aoraki sync/tortuosity runs>"
+}

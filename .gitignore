@@ -69,3 +69,7 @@ stag/embedded/benchmark/msp430/results_msp430.csv
 stag/embedded/benchmark/xtensa/*/test_vectors.h
 stag/embedded/benchmark/xtensa/*/build/
 stag/embedded/benchmark/xtensa/results_xtensa.csv
+
+# Machine-specific path configuration (each developer fills in
+# local_paths.json from local_paths.template.json; never commit it).
+local_paths.json
