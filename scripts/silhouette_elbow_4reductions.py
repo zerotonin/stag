@@ -24,9 +24,11 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from kneed import KneeLocator
 from tqdm import tqdm
 
+# kneed (KneeLocator) is imported lazily inside the elbow-detection
+# branch of main() so that SLURM array tasks running in --csv-only
+# mode do not need to install it on the cluster.
 from stag.clustering.internal_metrics import compute_silhouette_stratified
 from stag.clustering.kmeans import shrink_data
 from stag.constants import (
@@ -183,6 +185,10 @@ def main() -> None:
         return
 
     # ─── Inertia / elbow per delSize ─────────────────────────────────
+    # KneeLocator is only needed when the figure is rendered (i.e. not
+    # in --csv-only mode), so the import is deferred to here.
+    from kneed import KneeLocator
+
     inertia_summary = pd.read_csv(args.inertia_csv)
     # That file has columns: delSize, k, ch, ch_low, ch_high, instability, ...,
     # inertia, inertia_low, inertia_high.

@@ -28,7 +28,12 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from kneed import KneeLocator
+
+# kneed (KneeLocator) is imported lazily inside locate_elbow_kneedle()
+# so the rest of this module - in particular compute_silhouette_stratified
+# and the inertia-recompute path used by SLURM array tasks - does not
+# need kneed installed.  Kneed is only required when the elbow is
+# actually located.
 from sklearn.metrics import silhouette_samples
 from tqdm import tqdm
 
@@ -322,6 +327,8 @@ def locate_elbow_kneedle(
           ``"normalised_knee_distance"`` — Kneedle internal score
               (larger ⇒ more pronounced elbow).
     """
+    from kneed import KneeLocator  # local import - see module-top comment
+
     kl = KneeLocator(
         list(k_values), list(inertia),
         S=S, curve=curve, direction=direction,
