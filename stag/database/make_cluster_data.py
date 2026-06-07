@@ -60,12 +60,34 @@ def save_data_to_npy(data, filename):
     np.save(filename, np.array(data, dtype=float))
 
 if __name__ == "__main__":
-    database_url = 'sqlite:////projects/sciences/zoology/geurten_lab/deer_2024/deer_data.db'  # Update this to your database URL
+    import argparse
+    from pathlib import Path
+
+    from stag.local_paths import get_path
+
+    parser = argparse.ArgumentParser(
+        description="Aggregate per-deer accelerometer data from the legacy "
+                    "SQLite database into a single clust_data_raw.npy.  "
+                    "DB URL defaults to local_paths.json deer_db_url_legacy.",
+    )
+    parser.add_argument(
+        "--db-url", default=None,
+        help="SQLAlchemy URL for the source database (default: resolve "
+             "STAG_DEER_DB_URL_LEGACY or local_paths.json deer_db_url_legacy).",
+    )
+    parser.add_argument(
+        "--output", "-o", required=True, type=Path,
+        help="Output .npy path (this script previously hard-coded an "
+             "Aoraki path; it is now a required argument).",
+    )
+    args = parser.parse_args()
+
+    database_url = args.db_url or get_path("deer_db_url_legacy")
     session, engine = open_session(database_url)
     deer_ids = get_deer_ids(session)
-    
+
     all_data = aggregate_all_data(session, deer_ids)
-    save_data_to_npy(all_data, '/projects/sciences/zoology/geurten_lab/deer_2024/clust_data_raw.npy')
+    save_data_to_npy(all_data, args.output)
 
     session.close()
-    print("Data processing complete and saved to '/projects/sciences/zoology/geurten_lab/deer_2024/clust_data_raw.npy'.")
+    print(f"Data processing complete and saved to '{args.output}'.")

@@ -418,12 +418,20 @@ class DeerDatabaseHandler:
 
 
 if __name__ == "__main__":
+    from stag.local_paths import get_path
+
     if len(sys.argv) != 4:
-        print("Usage: python -m stag.database.handler <cluster_label> <column_name> <json_file_path>")
+        print(
+            "Usage: python -m stag.database.handler "
+            "<cluster_label> <column_name> <json_file_path>\n\n"
+            "Resolves the SQLite URL via stag.local_paths "
+            "(STAG_DEER_DB_URL env var, then deer_db_url in "
+            "local_paths.json).",
+        )
         sys.exit(1)
 
     _, column_name, json_file_path = sys.argv[1], sys.argv[2], sys.argv[3]
-    database_url = "sqlite:////projects/sciences/zoology/geurten_lab/deer_2024/deer_data_gps.db"
+    database_url = get_path("deer_db_url")
     handler = DeerDatabaseHandler(database_url)
     handler.create_database()
     handler.update_json_with_statistics(json_file_path, column_name)
