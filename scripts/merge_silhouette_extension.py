@@ -36,6 +36,16 @@ PALETTE: dict[int, str] = {
     50: "#291E38",
 }
 
+# Per-leave-out-reduction marker convention (lab canonical):
+#  0 %  -> circle, 10 % -> upward triangle,
+#  25 % -> downward triangle, 50 % -> left-ward triangle.
+MARKERS: dict[int, str] = {
+    0:  "o",
+    10: "^",
+    25: "v",
+    50: "<",
+}
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
@@ -128,8 +138,11 @@ def main() -> None:
             facecolor=colour, alpha=0.30, linewidth=0,
         )
         ax_sil.plot(
-            sub["k"], sub["silhouette"], "-o", color=colour, markersize=4,
-            linewidth=1.4, label=f"delSize {ds} %",
+            sub["k"], sub["silhouette"],
+            linestyle="-", marker=MARKERS[ds],
+            color=colour, markersize=5, markeredgecolor="black",
+            markeredgewidth=0.4, linewidth=1.4,
+            label=f"delSize {ds} %",
         )
     ax_sil.set_title("(C) Silhouette per leave-out reduction (k = 2 .. 50)")
     ax_sil.set_ylabel(r"Mean silhouette ($\bar{s}$)")
@@ -146,8 +159,11 @@ def main() -> None:
             facecolor=colour, alpha=0.30, linewidth=0,
         )
         ax_W.plot(
-            sub["k"], sub["inertia"], "-o", color=colour, markersize=4,
-            linewidth=1.4, label=f"delSize {ds} %",
+            sub["k"], sub["inertia"],
+            linestyle="-", marker=MARKERS[ds],
+            color=colour, markersize=5, markeredgecolor="black",
+            markeredgewidth=0.4, linewidth=1.4,
+            label=f"delSize {ds} %",
         )
         if ds in elbows:
             k_e = elbows[ds]

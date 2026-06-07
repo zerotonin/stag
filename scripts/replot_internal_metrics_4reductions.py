@@ -184,6 +184,10 @@ def render_figure(
         25: WONG["orange"],
         50: WONG["reddish_purple"],
     }
+    # Per-leave-out-reduction marker convention (lab canonical):
+    #  0 % -> circle, 10 % -> upward triangle,
+    #  25 % -> downward triangle, 50 % -> left-ward triangle.
+    delsize_markers = {0: "o", 10: "^", 25: "v", 50: "<"}
 
     fig, ((ax_ch, ax_inst), (ax_sil, ax_W)) = plt.subplots(
         2, 2, figsize=(9, 7.2),
@@ -198,8 +202,11 @@ def render_figure(
                 facecolor=colour, alpha=0.20, linewidth=0,
             )
             ax.plot(
-                sub["k"], sub[value_col], "-o", color=colour, markersize=3,
-                linewidth=1.3, label=f"delSize {ds} %",
+                sub["k"], sub[value_col],
+                linestyle="-", marker=delsize_markers[ds],
+                color=colour, markersize=4, markeredgecolor="black",
+                markeredgewidth=0.4, linewidth=1.3,
+                label=f"delSize {ds} %",
             )
         ax.set_title(title)
         ax.set_ylabel(ylabel)
@@ -220,8 +227,10 @@ def render_figure(
         sil_finite["k"], sil_finite["silhouette_low"], sil_finite["silhouette_high"],
         facecolor=WONG["blue"], alpha=0.35, linewidth=0,
     )
-    ax_sil.plot(sil_finite["k"], sil_finite["silhouette"], "-o",
-                color=WONG["blue"], markersize=3, linewidth=1.3,
+    ax_sil.plot(sil_finite["k"], sil_finite["silhouette"],
+                linestyle="-", marker=delsize_markers[0],
+                color=WONG["blue"], markersize=4, markeredgecolor="black",
+                markeredgewidth=0.4, linewidth=1.3,
                 label="delSize 0 % (rigorous)")
     ax_sil.set_title("(C) Silhouette")
     ax_sil.set_ylabel(r"Mean silhouette ($\bar{s}$)")
