@@ -36,7 +36,6 @@ from stag.constants import (
     save_figure,
 )
 
-
 # ┌────────────────────────────────────────────────────────────┐
 # │ Behaviour-token vocabulary  « free-text -> canonical set » │
 # └────────────────────────────────────────────────────────────┘
@@ -506,7 +505,7 @@ def main() -> None:
                  columns=[f"PM{k}_video" for k in clusters_pm]
                 ).to_csv(tables_dir / "table_pm_vs_pm_confusion_counts.csv")
 
-    print(f"\nWrote:")
+    print("\nWrote:")
     for p in (figures_dir / "figure_groundtruth_token_confusion.png",
               figures_dir / "figure_groundtruth_token_confusion_inview.png",
               figures_dir / "figure_groundtruth_pm_vs_pm_confusion.png",

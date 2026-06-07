@@ -20,9 +20,8 @@ import argparse
 from pathlib import Path
 
 import numpy as np
-import pandas as pd
 
-from stag.constants import CLUSTER_RESULTS_DIR, MAXABS_SCALER_CSV
+from stag.constants import CLUSTER_RESULTS_DIR
 from stag.embedded.export_centroids import (
     DEFAULT_Q_FRAC_BITS,
     QFormat,

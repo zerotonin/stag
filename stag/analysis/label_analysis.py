@@ -28,7 +28,7 @@ class LabelAnalyser:
         Sampling rate in Hz, used to convert bout lengths to seconds.
         Default ``50``.
 
-    Attributes
+    Attributes:
     ----------
     IDX : numpy.ndarray
         The label array (modified in place by :meth:`filterIDX`).
@@ -41,6 +41,12 @@ class LabelAnalyser:
     """
 
     def __init__(self, file_path, fps=50):
+        """Load a per-sample label ``.npy`` and cache deriveables.
+
+        Args:
+            file_path: Path to the per-sample cluster-label ``.npy``.
+            fps:       Sample rate in Hz (default 50).
+        """
         self.IDX = np.load(file_path)
         self.fps = fps
         self.cen_num = self.IDX.max() + 1
@@ -77,7 +83,7 @@ class LabelAnalyser:
     def get_percentage(self):
         """Compute the prevalence of each label as a percentage.
 
-        Returns
+        Returns:
         -------
         numpy.ndarray
             Array of length ``cen_num`` with percentage values.
@@ -94,7 +100,7 @@ class LabelAnalyser:
             If ``True``, single-frame runs are excluded.
             Default ``True``.
 
-        Returns
+        Returns:
         -------
         list of list of int
             One sub-list per label, containing bout lengths in frames.
@@ -118,7 +124,7 @@ class LabelAnalyser:
     def get_mean_durations(self):
         """Compute mean bout duration and SEM for each label.
 
-        Returns
+        Returns:
         -------
         list of tuple of (float, float)
             Each tuple is ``(mean_seconds, sem_seconds)``.
@@ -141,7 +147,7 @@ class LabelAnalyser:
         compatibility with the LabelAnalyser API; new code should call
         the free function directly.
 
-        Returns
+        Returns:
         -------
         numpy.ndarray
             Square matrix of shape ``(cen_num, cen_num)`` where entry

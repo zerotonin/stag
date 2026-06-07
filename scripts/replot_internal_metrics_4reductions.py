@@ -23,7 +23,6 @@ from __future__ import annotations
 
 import argparse
 import json
-from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -34,8 +33,12 @@ from scipy.optimize import linear_sum_assignment
 from tqdm import tqdm
 
 from stag.constants import (
-    CLUSTER_RESULTS_DIR, MAXABS_CLUSTERING_INPUT, RESULTS_DIR_DEFAULT,
-    WONG, apply_figure_defaults, save_figure,
+    CLUSTER_RESULTS_DIR,
+    MAXABS_CLUSTERING_INPUT,
+    RESULTS_DIR_DEFAULT,
+    WONG,
+    apply_figure_defaults,
+    save_figure,
 )
 
 
@@ -290,10 +293,10 @@ def main() -> None:
     print(f"\nComputing centroid-only inertia for {len(df)} fits ...")
     df["inertia"] = compute_inertias(df, X_sub, n_full=data.shape[0])
 
-    print(f"\nComputing Hungarian-matched instability ...")
+    print("\nComputing Hungarian-matched instability ...")
     df["instability"] = compute_instability(df)
 
-    print(f"\nAggregating per (delSize, k) ...")
+    print("\nAggregating per (delSize, k) ...")
     ch_agg = aggregate_per_k(df, "ch")
     inst_agg = aggregate_per_k(df, "instability")
     inertia_agg = aggregate_per_k(df, "inertia")
@@ -303,7 +306,7 @@ def main() -> None:
     sil_df = sil_df[["k", "silhouette", "silhouette_low", "silhouette_high"]]
     print(f"  silhouette rows: {len(sil_df)}  ({sil_df['silhouette'].notna().sum()} non-NaN)")
 
-    print(f"\nRendering Figure 2 (4-reduction overlay) ...")
+    print("\nRendering Figure 2 (4-reduction overlay) ...")
     render_figure(ch_agg, inst_agg, inertia_agg, sil_df,
                   chosen_k=args.chosen_k, output_dir=args.output_dir)
 

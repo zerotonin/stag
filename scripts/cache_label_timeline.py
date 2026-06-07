@@ -118,7 +118,7 @@ def _stream_one_deer(
     pandas chunks so peak memory stays well under 1 GB even for the
     largest animals.
     """
-    sql = f"""
+    sql = """
         SELECT a.NZ_DateTime
           FROM accelerometer_data a
           JOIN cluster_labels c ON c.acc_id = a.data_id

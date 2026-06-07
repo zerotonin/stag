@@ -33,7 +33,6 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 
-
 THIS_DIR  = Path(__file__).resolve().parent
 QEMU_DEFAULT_PATH = Path.home() / "opt" / "qemu" / "bin" / "qemu-system-xtensa"
 TIMEOUT_S = 30.0

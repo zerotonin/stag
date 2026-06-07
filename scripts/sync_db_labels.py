@@ -171,7 +171,7 @@ def _verify(con: sqlite3.Connection, labels: np.ndarray) -> None:
     rng = np.random.default_rng(0)
     sample_ids = rng.integers(1, labels.size + 1, size=10)
     sample_ids.sort()
-    print(f"  spot checks (random ids):")
+    print("  spot checks (random ids):")
     for row_id in sample_ids:
         db_label = con.execute(
             "SELECT label FROM cluster_labels WHERE id = ?", (int(row_id),),
@@ -182,7 +182,7 @@ def _verify(con: sqlite3.Connection, labels: np.ndarray) -> None:
 
     # Histogram comparison.
     print()
-    print(f"  PM histograms (DB vs npy):")
+    print("  PM histograms (DB vs npy):")
     db_hist = dict(con.execute(
         "SELECT label, COUNT(*) FROM cluster_labels GROUP BY label ORDER BY label"
     ).fetchall())
@@ -250,10 +250,10 @@ def main() -> None:
         _verify(con, labels)
 
         print()
-        print(f"  ANALYZE cluster_labels ...")
+        print("  ANALYZE cluster_labels ...")
         con.execute("ANALYZE cluster_labels")
         con.commit()
-        print(f"  done.")
+        print("  done.")
     finally:
         con.close()
 

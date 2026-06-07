@@ -29,8 +29,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
-
 import numpy as np
 from tqdm import tqdm
 
@@ -132,13 +130,6 @@ def ngram_frequencies(
         Sliding window with stride 1.
     """
     idx = np.asarray(idx, dtype=np.int64)
-    if n_states is not None:
-        valid = idx < n_states
-        # We need n consecutive valid positions to form a window.
-        # Cheap and correct: build the n-tuple matrix first, then mask
-        # rows where any element is out-of-range.
-        pass
-
     if idx.size < n:
         return {}
 
@@ -207,10 +198,6 @@ def null_distribution(
         rng = np.random.default_rng()
     if null_kind not in ("first_order", "marginal"):
         raise ValueError(f"null_kind={null_kind!r} — expected 'first_order' or 'marginal'")
-    shuffle_fn = (
-        shuffle_first_order if null_kind == "first_order" else
-        lambda x, r: shuffle_marginal(x, r)
-    )
     if n_states is None:
         n_states = int(np.asarray(idx).max()) + 1
 
@@ -278,7 +265,6 @@ def flag_significant_ngrams(
         raise ValueError("Empty null distribution.")
 
     items = list(observed.items())
-    ngrams = [ng for ng, _ in items]
     n_per_test = len(items)
 
     p_vals = np.empty(n_per_test)

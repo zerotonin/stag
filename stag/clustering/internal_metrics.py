@@ -23,7 +23,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Sequence
-from concurrent.futures import ProcessPoolExecutor, as_completed
+from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
 import numpy as np
@@ -75,10 +75,10 @@ def compute_silhouette_stratified(
     n_repeats: int = 50,
     rng: np.random.Generator | None = None,
 ) -> dict[str, float | np.ndarray]:
-    """Mean silhouette score via stratified per-cluster subsampling.
+    r"""Mean silhouette score via stratified per-cluster subsampling.
 
-    Silhouette is :math:`\\mathcal{O}(n^2)` in pairwise distances, so on
-    the full ~$8.6\\times10^{7}$ STAG sample it is infeasible.  This
+    Silhouette is :math:`\mathcal{O}(n^2)` in pairwise distances, so on
+    the full ~$8.6\times10^{7}$ STAG sample it is infeasible.  This
     helper draws ``n_per_cluster`` samples from every cluster, computes
     silhouette on that subsample, and repeats ``n_repeats`` times with
     different seeds to give a median ± IQR.
@@ -144,10 +144,10 @@ def compute_silhouette_stratified(
 def _recompute_inertia_one(
     args: tuple[str, str, bool, tuple[float, ...] | None],
 ) -> dict | None:
-    """Worker for parallel inertia back-fill — kept at module level so
-    ProcessPoolExecutor can pickle it (per the house-style rule).
+    """Worker for parallel inertia back-fill.
 
-    ``reduction_filter`` is an optional tuple of allowed
+    Kept at module level so ProcessPoolExecutor can pickle it (per the
+    house-style rule).  ``reduction_filter`` is an optional tuple of allowed
     ``reduction_percent`` values.  If supplied, fits with a different
     reduction_percent are skipped without touching their labels file.
     """
@@ -369,16 +369,19 @@ def selection_summary(
     silently skips the fill.
 
     Args:
-        k_values:    Cluster counts in plotting order.
-        ch:          Calinski–Harabasz medians.
-        ch_low:      Lower 95 % bound (2.5th percentile).
-        ch_high:     Upper 95 % bound (97.5th percentile).
-        instability: Hungarian-matched centroid-drift medians.
-        instability_low / instability_high: 95 % bounds.
-        silhouette:  Stratified mean-silhouette medians.
-        silhouette_low / silhouette_high:   95 % bounds (over repeats).
-        inertia:     W(k) medians.
-        inertia_low / inertia_high:         95 % bounds.
+        k_values:         Cluster counts in plotting order.
+        ch:               Calinski–Harabasz medians.
+        ch_low:           Lower bound (typically the 25th percentile).
+        ch_high:          Upper bound (typically the 75th percentile).
+        instability:      Hungarian-matched centroid-drift medians.
+        instability_low:  Lower bound for instability.
+        instability_high: Upper bound for instability.
+        silhouette:       Stratified mean-silhouette medians.
+        silhouette_low:   Lower bound for silhouette (over repeats).
+        silhouette_high:  Upper bound for silhouette (over repeats).
+        inertia:          W(k) medians.
+        inertia_low:      Lower bound for inertia.
+        inertia_high:     Upper bound for inertia.
 
     Returns:
         DataFrame with the median columns plus matching ``_low`` /

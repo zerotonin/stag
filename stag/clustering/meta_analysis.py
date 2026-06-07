@@ -41,6 +41,11 @@ class ClusterMetaAnalysis:
     """
 
     def __init__(self, directory: str | Path) -> None:
+        """Bind the analyser to the per-fit metadata directory.
+
+        Args:
+            directory: Root of the ``delSize_*/k_*`` sweep tree.
+        """
         self.directory = str(directory)
         self.df: pd.DataFrame | None = None
 
@@ -230,6 +235,13 @@ class ClusterPlotter:
     """Plot quality / instability panels and centroid radar charts."""
 
     def __init__(self, dataframe: pd.DataFrame) -> None:
+        """Wrap a per-fit metadata DataFrame for plotting.
+
+        Args:
+            dataframe: Output of :meth:`ClusterAnalyser.analyze` containing
+                ``k_number``, ``reduction_percent``, ``calinski_harabasz_score``,
+                ``instability``, ``centroids`` columns.
+        """
         self.dataframe = dataframe
 
     def plot_metric(self, y_metric: str, log_scale: bool = False) -> plt.Figure:

@@ -1,5 +1,4 @@
-"""
-Test suite for the STAG pipeline.
+"""Test suite for the STAG pipeline.
 
 These tests verify core functionality without requiring GPU hardware
 or the full sensor dataset.
@@ -45,6 +44,7 @@ class TestSyncUtils:
     def test_correct_calibration_zero_mean(self):
         """Z-scored columns should have approximately zero mean."""
         import pandas as pd
+
         from stag.sync.utils import correct_calibration
 
         df = pd.DataFrame({"X": [1, 2, 3, 4, 5], "Y": [5, 4, 3, 2, 1], "Z": [2, 2, 2, 2, 2]})
@@ -55,6 +55,7 @@ class TestSyncUtils:
     def test_make_absolute(self):
         """Absolute transform removes negative values."""
         import pandas as pd
+
         from stag.sync.utils import make_absolute
 
         df = pd.DataFrame({"a": [-1, 2, -3], "b": [4, -5, 6]})
@@ -64,6 +65,7 @@ class TestSyncUtils:
     def test_sum_columns(self):
         """Row-wise sum matches expected values."""
         import pandas as pd
+
         from stag.sync.utils import sum_columns
 
         df = pd.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]})
@@ -118,6 +120,7 @@ class TestLabelAnalyser:
     def test_save_json(self, label_file, tmp_path):
         """Full pipeline should produce a valid JSON output."""
         import json
+
         from stag.analysis.label_analysis import LabelAnalyser
 
         la = LabelAnalyser(label_file, fps=1)

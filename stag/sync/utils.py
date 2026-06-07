@@ -7,7 +7,6 @@
 # ╚══════════════════════════════════════════════════════════════════╝
 """Helpers for synchronisation drop-event detection."""
 
-import pandas as pd
 
 
 def correct_calibration(data, cols=None):
@@ -20,7 +19,7 @@ def correct_calibration(data, cols=None):
     cols : list of str, optional
         Columns to standardise. Default ``['X', 'Y', 'Z']``.
 
-    Returns
+    Returns:
     -------
     pandas.DataFrame
         Z-scored copy of the selected columns.
@@ -40,7 +39,7 @@ def make_absolute(data):
     data : pandas.DataFrame
         Input data.
 
-    Returns
+    Returns:
     -------
     pandas.DataFrame
         DataFrame with absolute values.
@@ -56,7 +55,7 @@ def sum_columns(data):
     data : pandas.DataFrame
         Input data.
 
-    Returns
+    Returns:
     -------
     pandas.Series
         Row-wise sum.
@@ -72,7 +71,7 @@ def get_consecutive_differences(series):
     series : pandas.Series
         Input time series.
 
-    Returns
+    Returns:
     -------
     pandas.Series
         Consecutive differences (length = original − 1).
@@ -90,7 +89,7 @@ def get_calibrated_absolute_accelleration(data, cols=None):
     cols : list of str, optional
         Columns to process. Default ``['X', 'Y', 'Z']``.
 
-    Returns
+    Returns:
     -------
     pandas.Series
         Summed absolute z-scored acceleration.

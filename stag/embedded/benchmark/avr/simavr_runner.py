@@ -31,7 +31,6 @@ import re
 import shutil
 import signal
 import subprocess
-import sys
 import tempfile
 import time
 from dataclasses import dataclass
@@ -119,8 +118,10 @@ def _symbol_addresses(elf: Path, names: list[str]) -> dict[str, int]:
 
 
 def _gdb_script(addrs: dict[str, int], port: int) -> str:
-    """avr-gdb batch script: connect to simavr, break at bench_done,
-    read cycles_total + n_classifications by raw address, quit.
+    """Generate the avr-gdb batch script that drives simavr.
+
+    Connects to simavr, breaks at ``bench_done``, reads
+    ``cycles_total`` + ``n_classifications`` by raw address, quits.
 
     We do NOT 'file' the ELF — see :func:`_symbol_addresses` for why.
     Memory addresses are in the AVR-gdb data-space convention

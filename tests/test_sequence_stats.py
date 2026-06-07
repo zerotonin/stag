@@ -8,8 +8,6 @@ Covers:
 
 from __future__ import annotations
 
-from datetime import datetime
-
 import numpy as np
 import pandas as pd
 import pytest
@@ -24,20 +22,16 @@ from stag.analysis.circadian import (
 from stag.analysis.null_models import (
     flag_significant_ngrams,
     ngram_frequencies,
-    null_distribution,
     shuffle_first_order,
     shuffle_marginal,
     triplet_frequencies,
 )
 from stag.analysis.super_prototypes import (
-    BoutStream,
     bout_duration_stats,
     bout_stream,
-    extract_n_grams,
     identify_super_prototypes,
     per_animal_bout_streams,
 )
-
 
 # ─────────────────────────────────────────────────────────────────
 #  null_models
@@ -83,7 +77,6 @@ class TestShuffles:
         # Same setup as above but check that marginal shuffle does NOT
         # preserve T̂ — this is the property that motivates using the
         # first-order shuffle for super-prototype detection.
-        rng = np.random.default_rng(0)
         seq = np.tile([0, 1, 2, 3], 2500)  # perfectly periodic
         sh = shuffle_marginal(seq, np.random.default_rng(1))
 

@@ -11,15 +11,10 @@
 import logging
 import os
 
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
 from scipy.signal import find_peaks
 
 from stag.sync.utils import (
     correct_calibration,
-    get_calibrated_absolute_accelleration,
-    get_consecutive_differences,
     make_absolute,
     sum_columns,
 )
@@ -50,7 +45,7 @@ class BetterDataSync:
     plot_folder : str, optional
         Directory for saved plots.
 
-    Attributes
+    Attributes:
     ----------
     drops_dict : dict
         Detected calibration-drop timestamps after synchronisation.
@@ -67,6 +62,18 @@ class BetterDataSync:
         mkplot=False,
         plot_folder="",
     ):
+        """Initialise a deer-wise head/ear sync run.
+
+        Args:
+            deer_id:     Animal identifier.
+            head_data:   DataFrame of head-accelerometer rows.
+            ear_data:    DataFrame of ear-accelerometer rows.
+            window_dict: Start/end window indices for both channels.
+            log:         Write a per-deer log file (default True).
+            log_folder:  Directory for the log files.
+            mkplot:      Write per-deer diagnostic plots (default False).
+            plot_folder: Directory for the plots.
+        """
         self.deer_id = deer_id
         self.head_data = head_data
         self.ear_data = ear_data
@@ -107,7 +114,7 @@ class BetterDataSync:
         columns : list of str, optional
             Column names to process. Defaults to ``['X', 'Y', 'Z']``.
 
-        Returns
+        Returns:
         -------
         pandas.Series
             Summed absolute z-scored acceleration.
@@ -130,7 +137,7 @@ class BetterDataSync:
         distance : int, optional
             Minimum samples between peaks. Default ``500``.
 
-        Returns
+        Returns:
         -------
         numpy.ndarray
             Indices of detected peaks.
@@ -141,7 +148,7 @@ class BetterDataSync:
     def run_synchronization(self):
         """Execute the full synchronisation pipeline.
 
-        Returns
+        Returns:
         -------
         dict or None
             Dictionary with ``'head'`` and ``'ear'`` drop indices if

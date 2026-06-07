@@ -55,6 +55,7 @@ class BoutStream:
 
     @property
     def n_bouts(self) -> int:
+        """Number of bouts in the stream (equals ``labels.size``)."""
         return int(self.labels.size)
 
 

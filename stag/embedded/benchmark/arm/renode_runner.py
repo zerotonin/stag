@@ -23,13 +23,11 @@ import os
 import re
 import shutil
 import signal
-import socket
 import subprocess
 import tempfile
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-
 
 DEFAULT_GDB_PORT       = 3333
 DEFAULT_TIMEOUT_S      = 90.0
@@ -107,7 +105,6 @@ def _symbol_addresses(elf: Path, nm_tool: str, names: tuple[str, ...]) -> dict[s
 
 def _build_all(targets: list[McuTarget]) -> None:
     print("── make ──")
-    target_names = " ".join(t.name for t in targets)
     proc = subprocess.run(
         ["make", *[t.name for t in targets]],
         cwd=THIS_DIR, capture_output=True, text=True,
@@ -124,10 +121,12 @@ def _build_all(targets: list[McuTarget]) -> None:
 
 
 def _gdb_script(addrs: dict[str, int], port: int) -> str:
-    """Connect to Renode's gdb stub, break twice on bench_done, read
-    `cpu ExecutedInstructions` at each.  The firmware loops the
-    benchmark in an outer infinite loop so two consecutive hits of
-    bench_done bracket exactly one complete N-classification run.
+    """Generate the gdb-multiarch script used to drive Renode's gdb stub.
+
+    Connects to the stub, breaks twice on ``bench_done``, and reads
+    ``cpu ExecutedInstructions`` at each break.  The firmware loops
+    the benchmark in an outer infinite loop, so two consecutive hits
+    on ``bench_done`` bracket exactly one complete N-classification run.
 
     Renode 1.15.3's FPB emulation only honours one of the two hbreaks
     reliably for this CPU model — using a single breakpoint at

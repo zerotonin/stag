@@ -30,7 +30,6 @@ import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
 
-
 THIS_DIR  = Path(__file__).resolve().parent
 BUILD_DIR = THIS_DIR / "build"
 
@@ -123,15 +122,15 @@ def _mspdebug_script(addrs: dict[str, int]) -> str:
     cyc_addr = addrs["cycles_total"]
     n_addr   = addrs["n_classifications"]
     return "\n".join([
-        f"simio add timer ta0 3",
+        "simio add timer ta0 3",
         f"simio config ta0 base 0x{G2553_TIMER_A0_BASE:x}",
         f"simio config ta0 iv 0x{G2553_TIMER_A0_IV:x}",
         f"prog {addrs['__elf']}",
-        f"setbreak exit",
-        f"run",
+        "setbreak exit",
+        "run",
         f"md 0x{cyc_addr:x} 4",
         f"md 0x{n_addr:x} 2",
-        f"exit",
+        "exit",
         "",  # trailing newline
     ])
 

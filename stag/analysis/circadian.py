@@ -25,7 +25,6 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from datetime import date as _date
-from datetime import datetime
 
 import numpy as np
 import pandas as pd

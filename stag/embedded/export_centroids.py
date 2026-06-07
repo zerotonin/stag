@@ -34,7 +34,6 @@ from __future__ import annotations
 
 import argparse
 import datetime
-import glob
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -46,7 +45,6 @@ from stag.constants import (
     FEATURE_LABELS,
     MAXABS_SCALER_CSV,
 )
-
 
 DEFAULT_Q_FRAC_BITS: int = 12
 DEFAULT_K: int = 8
@@ -62,22 +60,27 @@ class QFormat:
 
     @property
     def total_bits(self) -> int:
+        """Sum of integer and fractional bits (excluding sign storage)."""
         return self.int_bits + self.frac_bits
 
     @property
     def scale(self) -> int:
+        """Integer scale factor ``2 ** frac_bits`` mapping float to fixed-point."""
         return 1 << self.frac_bits
 
     @property
     def max_signed(self) -> int:
+        """Largest signed integer representable in ``total_bits`` bits."""
         return (1 << (self.total_bits - 1)) - 1
 
     @property
     def min_signed(self) -> int:
+        """Smallest (most-negative) signed integer in ``total_bits`` bits."""
         return -(1 << (self.total_bits - 1))
 
     @property
     def range_float(self) -> tuple[float, float]:
+        """Representable float range ``(min, max)`` after fixed-point encoding."""
         return (self.min_signed / self.scale, self.max_signed / self.scale)
 
 
@@ -355,7 +358,7 @@ def centroids_to_c_header(
         comment="Inverse MaxAbs divisors as floats (for FPU MCUs).",
     ) + "\n\n"
 
-    header += f"\n#endif  /* STAG_CENTROIDS_H */\n"
+    header += "\n#endif  /* STAG_CENTROIDS_H */\n"
 
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -383,6 +386,7 @@ def _resolve_centroids(explicit: Path | None) -> Path:
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse CLI arguments for the centroid-export driver."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--centroids", type=Path, default=None,
@@ -401,6 +405,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    """Export the k=8 centroids as a C header (driver entry point)."""
     args = parse_args()
     centroids_path = _resolve_centroids(args.centroids)
     print(f"centroids : {centroids_path}")
@@ -428,7 +433,7 @@ def main() -> None:
         },
     )
 
-    print(f"── verification ──")
+    print("── verification ──")
     print(f"  max abs quantisation error : {verify['max_abs_quant_error']:.6e}")
     print(f"  nearest-centroid mismatch  : {verify['mismatch_fraction']:.4e}"
           f"  (tolerance {verify['tolerance']})")

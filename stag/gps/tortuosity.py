@@ -7,56 +7,82 @@
 # ╚══════════════════════════════════════════════════════════════════╝
 """Arc-chord path-tortuosity measure."""
 
-import pandas as pd
-import math
+
 import numpy as np
+import pandas as pd
 
 
+def calculate_tortuosity_and_speed(lat, lon, fps=0.5):
+    """Per-sample tortuosity and ground speed from (lat, lon) tracks.
 
-def calculate_tortuosity_and_speed(lat,lon,fps=0.5):
+    Args:
+        lat: Iterable of WGS84 latitudes.
+        lon: Iterable of WGS84 longitudes.
+        fps: Sample period in seconds (default 0.5 = 2 Hz).
+
+    Returns:
+        Dict with ``"tortuosity"`` and ``"speed"`` lists, one entry
+        per sample (boundary samples duplicated to match input length).
+    """
     tortuosity_values = []
-    absolute_speeds = [] 
+    absolute_speeds = []
     for i in range(len(lat) - 2):
         # Vector norm from the Point 0 to Point 1
         vn1 = lat_lon_vec_to_meter_vec(lat[i],lon[i],lat[i+1],lon[i+1])
-        
+
         # Vector norm from the Point 1 to Point 2
         vn2 = lat_lon_vec_to_meter_vec(lat[i+1],lon[i+1],lat[i+2],lon[i+2])
-        
+
         # Vector norm from the Point 0 to Point 2
         vn = lat_lon_vec_to_meter_vec(lat[i],lon[i],lat[i+2],lon[i+2])
-        
+
         absolute_speeds.append(vn1/fps)
-        
+
         # Handle division by zero
         if vn2 + vn1 == 0:
             tortuosity_values.append(0)  # or any other default value
         else:
             tortuosity_values.append(vn / (vn2 + vn1))
-    
-    #get last absolute speed        
+
+    #get last absolute speed
     i += 1
     # Vector norm from the Poitn 0 to Point 1
     vn1 = lat_lon_vec_to_meter_vec(lat[i],lon[i],lat[i+1],lon[i+1])
     absolute_speeds.append(vn1/fps)
-        
-    tortuosity_values.insert(0, tortuosity_values[0]) # append 2 zeros for the end 
+
+    tortuosity_values.insert(0, tortuosity_values[0]) # append 2 zeros for the end
     tortuosity_values.append(tortuosity_values[-1])
-    absolute_speeds.insert(0, absolute_speeds[0]) 
+    absolute_speeds.insert(0, absolute_speeds[0])
     return {"tortuosity":tortuosity_values,"speed": absolute_speeds}
 
-def lat_lon_vec_to_meter_vec(lat1, lon1, lat2, lon2):  # generally used geo measurement function
-    R = 6378.137 # Radius of earth in KM
+def lat_lon_vec_to_meter_vec(lat1, lon1, lat2, lon2):
+    """Great-circle distance in metres between two WGS84 (lat, lon) points."""
+    R = 6378.137  # Radius of earth in km
     dLat = lat2 * np.pi / 180 - lat1 * np.pi / 180
     dLon = lon2 * np.pi / 180 - lon1 * np.pi / 180
-    
-    a = np.sin(dLat/2) * np.sin(dLat/2) + np.cos(lat1 * np.pi / 180) * np.cos(lat2 * np.pi / 180) * np.sin(dLon/2) * np.sin(dLon/2)
-    c = 2 * np.arctan2(np.sqrt(a), np.sqrt(1-a))
+
+    a = (
+        np.sin(dLat / 2) ** 2
+        + np.cos(lat1 * np.pi / 180) * np.cos(lat2 * np.pi / 180)
+        * np.sin(dLon / 2) ** 2
+    )
+    c = 2 * np.arctan2(np.sqrt(a), np.sqrt(1 - a))
     d = R * c
-    return d * 1000  #meters
+    return d * 1000  # convert km -> m
+
 
 def extract_tort_and_speed(saved_loc_and_tort_filepath):
-    deer_data=pd.read_hdf(saved_loc_and_tort_filepath)
+    """Compute tortuosity + speed for the trajectories stored in an h5 file.
+
+    Args:
+        saved_loc_and_tort_filepath: Path to a single-table h5 file with
+            ``location-lat`` and ``location-lon`` columns.
+
+    Returns:
+        DataFrame with the original lat/lon plus interpolated
+        ``tortuosity`` and ``absolute_speed`` columns.
+    """
+    deer_data = pd.read_hdf(saved_loc_and_tort_filepath)
     deer_data.head()
 
     pos_data = deer_data.loc[:,['location-lat','location-lon']].copy()
@@ -75,8 +101,9 @@ def extract_tort_and_speed(saved_loc_and_tort_filepath):
     original_deer_data["absolute_speed"] = pd.NA
     original_deer_data.update(pos_data)
 
-    deer_data_interpolated=original_deer_data.copy()
-    deer_data_interpolated['location-lat'].interpolate(method='linear', inplace=True) # linearly interpolate all Nas between obs of location
+    deer_data_interpolated = original_deer_data.copy()
+    # Linearly interpolate all NaNs between observed locations.
+    deer_data_interpolated['location-lat'].interpolate(method='linear', inplace=True)
     deer_data_interpolated['location-lon'].interpolate(method='linear', inplace=True)
     deer_data_interpolated['tortuosity'].interpolate(method='linear', inplace=True)
     deer_data_interpolated['absolute_speed'].interpolate(method='linear', inplace=True)

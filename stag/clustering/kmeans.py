@@ -45,7 +45,7 @@ def shrink_data(data, reduction_percent, cut_position_percent):
     cut_position_percent : float
         Starting position of the cut as a percentage of total length.
 
-    Returns
+    Returns:
     -------
     numpy.ndarray
         Reduced feature matrix.
@@ -89,7 +89,7 @@ def generate_filename(parent_dir, tag, num_clusters, deletion_size, deletion_pos
     deletion_position : int
         Deletion position percentage.
 
-    Returns
+    Returns:
     -------
     dict
         Dictionary with keys ``'centroids'``, ``'labels'``, ``'meta'``
@@ -154,7 +154,7 @@ def get_quality(labels, data_gpu_scaled):
     data_gpu_scaled : cupy.ndarray or numpy.ndarray
         Standardised feature matrix (on GPU or CPU).
 
-    Returns
+    Returns:
     -------
     float
         Calinski--Harabasz score, or ``NaN`` if only one cluster is
