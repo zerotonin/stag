@@ -21,6 +21,7 @@ from tqdm import tqdm
 
 from stag.database.orm import AccelerometerData, DeerInfo, TrajectoryData
 
+
 def open_session(database_url):
     """Opens a session for the database."""
     engine = create_engine(database_url)
@@ -51,7 +52,7 @@ def aggregate_all_data(session, deer_ids):
     for deer_id in tqdm(deer_ids, desc="Processing Deer IDs"):
         deer_data = get_data_for_deer(session, deer_id)
         all_data.append(deer_data)
-    
+
     # Stack vertically
     return np.vstack(all_data)
 

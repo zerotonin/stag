@@ -22,7 +22,6 @@
 
 from __future__ import annotations
 
-import csv
 import datetime
 import json
 import os
@@ -55,6 +54,12 @@ class DeerDatabaseHandler:
     """
 
     def __init__(self, database_url: str) -> None:
+        """Bind a SQLAlchemy engine for ``database_url``.
+
+        Args:
+            database_url: SQLAlchemy URL string (e.g.
+                ``"sqlite:////path/to/deer.db"``).
+        """
         self.engine = create_engine(database_url)
 
     # ─────────────────────────────────────────────────────────────────
