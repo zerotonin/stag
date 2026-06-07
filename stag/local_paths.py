@@ -60,8 +60,11 @@ _cache: dict[str, Any] | None = None
 
 
 class LocalPathNotConfiguredError(RuntimeError):
-    """Raised when a local-path key is needed but neither env var,
-    local_paths.json, nor an explicit default supplies it."""
+    """Raised when a local-path key cannot be resolved.
+
+    Triggered when neither the matching env var, ``local_paths.json``,
+    nor an explicit ``default`` kwarg supplies a value.
+    """
 
 
 def _load_json() -> dict[str, Any]:
