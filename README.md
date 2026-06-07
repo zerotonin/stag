@@ -4,6 +4,7 @@
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![Tests](https://github.com/zerotonin/stag/actions/workflows/tests.yml/badge.svg)](https://github.com/zerotonin/stag/actions/workflows/tests.yml)
 [![Documentation](https://github.com/zerotonin/stag/actions/workflows/docs.yml/badge.svg)](https://zerotonin.github.io/stag/)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19106434.svg)](https://doi.org/10.5281/zenodo.19106434)
 
 An unsupervised machine-learning pipeline for classifying farmed red deer
@@ -68,6 +69,34 @@ pip install -e .
 
 For GPU-accelerated clustering you additionally need
 [RAPIDS cuML](https://rapids.ai/) installed in your environment.
+
+### Local paths (one-time, per-machine)
+
+STAG keeps every machine-specific absolute path out of tracked code.
+The first time you clone, copy the template and edit it with the
+absolute paths on your machine:
+
+```bash
+cp local_paths.template.json local_paths.json
+$EDITOR local_paths.json   # replace every <placeholder> with a real path
+```
+
+The keys you'll need depend on what you want to run:
+
+- `data_root` and `hcs_source` — local NVMe + read-only HCS archive
+  roots; required by every analysis script.
+- `aoraki_*` — Aoraki HPC paths; only required when running the
+  sync / tortuosity scripts under `scripts/` or the SLURM dispatchers
+  under `slurm/`.
+- `deer_db_url` / `deer_db_url_legacy` — SQLAlchemy URLs for the
+  primary + legacy SQLite databases; only required when running the
+  driver blocks of `stag.database.handler` or
+  `stag.database.make_cluster_data`.
+
+`local_paths.json` is gitignored — it never leaves the machine.  Each
+value can also be overridden by an environment variable (`STAG_DATA_DIR`,
+`STAG_DEER_DB_URL`, etc.); see `stag/local_paths.py` for the full
+key-to-env-var map.
 
 ## Quick start
 
