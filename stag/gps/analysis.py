@@ -6,10 +6,12 @@
 # ║  (NZMG, EPSG:27200), compute ground speed and path               ║
 # ║  tortuosity, and apply Gaussian smoothing.                       ║
 # ║                                                                  ║
-# ║  Indentation rot in several function bodies (pre-existing) is    ║
-# ║  fixed in this revision; the broken ``from DeerInfo import ...`` ║
-# ║  reference left over from the headshake_project rename now       ║
-# ║  points at the canonical ``stag.database.handler`` module.       ║
+# ║  pyproj is imported lazily inside ``project_to_NZ_map_grid`` so  ║
+# ║  ``import stag.gps.analysis`` works on machines that do not ship ║
+# ║  pyproj in their conda environment.  The driver block at the     ║
+# ║  bottom of this file ingests a single h5 trajectory file into a  ║
+# ║  deer-data SQLite database via                                   ║
+# ║  :class:`stag.database.handler.DeerDatabaseHandler`.             ║
 # ╚══════════════════════════════════════════════════════════════════╝
 """GPS trajectory processing and feature extraction.
 
