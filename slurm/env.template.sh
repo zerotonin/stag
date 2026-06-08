@@ -45,6 +45,13 @@
 # Sibling ``files_extracted`` tree (raw CSV inputs + sync output dirs).
 : "${STAG_HPC_FILES_EXTRACTED:=<absolute path to files_extracted/ on the cluster>}"
 
+# Cache directory for cluster-stability null surrogates (see
+# ``stag.analysis.stability_null`` / ``scripts/build_null_surrogate.py``).
+# Each draw is a 4.6 GB float32 .npy at the same n as the MaxAbs feature
+# matrix; ten seeds = ~46 GB.  Defaults to a sibling of the data root so
+# the surrogates live on the same fast filesystem as the real input.
+: "${STAG_HPC_NULL_SURROGATE_DIR:=${STAG_HPC_DATA_ROOT}/null_surrogates}"
+
 # Primary SQLite database (cluster_labels + GPS + video tables).
 : "${STAG_HPC_DATA_DB:=${STAG_HPC_DATA_ROOT}/deer_data_gps.db}"
 
@@ -70,6 +77,7 @@
 # ─── Export everything for the SLURM job environment ─────────────────
 export STAG_HPC_USER STAG_HPC_PROJECT_DIR STAG_HPC_CONDA_PY STAG_HPC_CPU_PY
 export STAG_HPC_DATA_ROOT STAG_HPC_FILES_EXTRACTED STAG_HPC_DATA_DB
+export STAG_HPC_NULL_SURROGATE_DIR
 export STAG_HPC_MERGED_SIGNALS_V2 STAG_HPC_DB_FOLDER STAG_HPC_DEER_CODES
 export STAG_HPC_COAUTHOR_HOME STAG_HPC_COAUTHOR_PROJECT_DIR
 export STAG_DATA_DIR STAG_DEER_DB_URL
