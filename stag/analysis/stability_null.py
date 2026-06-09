@@ -57,6 +57,7 @@ def build_uniform_surrogate(
 def hungarian_centroid_drift(
     centroids_list: list[np.ndarray],
     ch_scores: list[float] | None = None,
+    unscale: np.ndarray | None = None,
 ) -> np.ndarray:
     """Hungarian-matched mean centroid distance to the best-CH reference.
 
@@ -73,6 +74,17 @@ def hungarian_centroid_drift(
         ch_scores:      Optional Calinski-Harabasz scores aligned with
                         ``centroids_list``.  When provided, the
                         highest-CH fit becomes the reference.
+        unscale:        Optional per-column multiplier of shape ``(d,)``
+                        applied to every centroid before the distance
+                        calc.  Use this to lift centroids out of MaxAbs
+                        scale ``[-1, 1]`` back into the original
+                        per-feature units (e.g. g-force for the deer
+                        accelerometer columns).  Distances are uniformly
+                        scaled when every divisor is identical, so the
+                        null-vs-real ratio is preserved; the conversion
+                        only changes the y-axis units, not the
+                        scientific finding.  ``None`` keeps the MaxAbs
+                        convention.
 
     Returns:
         Length-``len(centroids_list)`` array of per-fit drift values.
@@ -88,11 +100,22 @@ def hungarian_centroid_drift(
     else:
         ref_idx = int(np.nanargmax(np.asarray(ch_scores, dtype=np.float64)))
 
-    ref_c = np.asarray(centroids_list[ref_idx], dtype=np.float32)
+    scale = (
+        None if unscale is None
+        else np.asarray(unscale, dtype=np.float32).reshape(1, -1)
+    )
+
+    def _prep(c: np.ndarray) -> np.ndarray:
+        arr = np.asarray(c, dtype=np.float32)
+        if scale is not None:
+            arr = arr * scale
+        return arr
+
+    ref_c = _prep(centroids_list[ref_idx])
     for i in range(n_fits):
         if i == ref_idx:
             continue
-        other_c = np.asarray(centroids_list[i], dtype=np.float32)
+        other_c = _prep(centroids_list[i])
         dist_matrix = np.linalg.norm(
             ref_c[:, None, :] - other_c[None, :, :], axis=2,
         )
