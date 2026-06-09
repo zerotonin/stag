@@ -60,6 +60,16 @@ def parse_args() -> argparse.Namespace:
              "(full-N is wastefully expensive at N = 2e8).",
     )
     parser.add_argument(
+        "--unscale-csv", type=Path, default=None,
+        help="Path to the MaxAbs divisors CSV.  When provided, "
+             "centroids are multiplied by the per-column divisors "
+             "before the Hungarian distance calc, so the per-fit "
+             "instability values land in physical (g-force) units "
+             "rather than MaxAbs space.  Pass "
+             "``stag.constants.MAXABS_SCALER_CSV`` to match the "
+             "deer-2024 pipeline.",
+    )
+    parser.add_argument(
         "--output-csv", type=Path, required=True,
         help="Destination CSV for the per-fit rows.",
     )
@@ -82,7 +92,7 @@ def _import_gpu_stack():
 def main() -> None:
     args = parse_args()
     cp, KMeans = _import_gpu_stack()
-    from sklearn.metrics import calinski_harabasz_score
+    from sklearn.metrics import calinski_harabasz_score, silhouette_score
 
     print(f"[{datetime.datetime.now()}] Loading surrogate {args.surrogate}")
     surrogate_cpu = np.load(args.surrogate, mmap_mode="r")
@@ -96,6 +106,8 @@ def main() -> None:
 
     centroids_list: list[np.ndarray] = []
     ch_scores: list[float] = []
+    inertias: list[float] = []
+    silhouettes: list[float] = []
     durations: list[float] = []
 
     # Single shared sub-sample index across the block so CH values
@@ -131,29 +143,63 @@ def main() -> None:
         scores = sub_x_cpu @ c_cpu.T
         sub_labels = (-2.0 * scores + c_norm).argmin(axis=1)
 
+        # Full-data inertia is what cuML reports natively (W(k) =
+        # within-cluster sum of squared distances).
+        inertia = float(kmeans.inertia_) if hasattr(kmeans, "inertia_") else float("nan")
+
         if len(np.unique(sub_labels)) > 1:
             ch = float(calinski_harabasz_score(sub_x_cpu, sub_labels))
+            # Silhouette is O(N^2) — use sklearn's sample_size kwarg to
+            # keep the pairwise distance matrix bounded to ~64 MB
+            # regardless of k.  random_state pinned to kmeans_seed so
+            # the sample selection is reproducible per fit.
+            sil = float(silhouette_score(
+                sub_x_cpu, sub_labels,
+                sample_size=min(4000, sub_x_cpu.shape[0]),
+                random_state=kmeans_seed,
+            ))
         else:
             ch = float("nan")
+            sil = float("nan")
 
         dt = (datetime.datetime.now() - t0).total_seconds()
-        print(f"  CH (sub) = {ch:.1f}, fit time = {dt:.1f}s")
+        print(
+            f"  CH (sub) = {ch:.1f}, silhouette (sub) = {sil:.4f}, "
+            f"inertia = {inertia:.3e}, fit time = {dt:.1f}s",
+        )
 
         centroids_list.append(centroids)
         ch_scores.append(ch)
+        inertias.append(inertia)
+        silhouettes.append(sil)
         durations.append(dt)
 
+    unscale_vec: np.ndarray | None = None
+    if args.unscale_csv is not None:
+        # pd is imported at module scope; don't shadow it here.
+        unscale_vec = pd.read_csv(args.unscale_csv).iloc[0].to_numpy(
+            dtype=np.float32,
+        )
+        print(
+            f"[{datetime.datetime.now()}] Loaded per-column divisors "
+            f"{unscale_vec} from {args.unscale_csv}",
+        )
+
     print(f"[{datetime.datetime.now()}] Computing Hungarian centroid drift")
-    drift = hungarian_centroid_drift(centroids_list, ch_scores=ch_scores)
+    drift = hungarian_centroid_drift(
+        centroids_list, ch_scores=ch_scores, unscale=unscale_vec,
+    )
 
     rows = [
         {
-            "surrogate_seed": args.surrogate_seed,
-            "k": args.k,
-            "kmeans_seed": args.kmeans_seed_base + fit_idx,
-            "ch": ch_scores[fit_idx],
+            "surrogate_seed":   args.surrogate_seed,
+            "k":                args.k,
+            "kmeans_seed":      args.kmeans_seed_base + fit_idx,
+            "ch":               ch_scores[fit_idx],
+            "silhouette":       silhouettes[fit_idx],
+            "inertia":          inertias[fit_idx],
             "instability_null": drift[fit_idx],
-            "fit_duration_s": durations[fit_idx],
+            "fit_duration_s":   durations[fit_idx],
         }
         for fit_idx in range(args.n_fits)
     ]
