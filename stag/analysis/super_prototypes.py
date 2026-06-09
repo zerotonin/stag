@@ -30,6 +30,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import numpy as np
+import pandas as pd
 
 from stag.analysis.null_models import (
     flag_significant_ngrams,
@@ -232,8 +233,11 @@ def bout_duration_stats(
 ) -> dict[int, dict[str, float]]:
     """Per-PM bout-duration summary (median, IQR, count) in seconds.
 
-    Used by R3 Q5's bout-duration comparator and by the
-    `[INTERP]` per-animal supplementary table.
+    Operates on a SINGLE :class:`BoutStream` and pools all of its bouts.
+    For across-animal summaries use :func:`per_animal_pm_duration_stats`
+    followed by :func:`aggregate_durations_across_animals` — pooling
+    across animals at this level pseudo-replicates (the animal with
+    most bouts dominates the moments and SEMs).
     """
     out: dict[int, dict[str, float]] = {}
     for pm in np.unique(bouts.labels):
@@ -251,3 +255,99 @@ def bout_duration_stats(
             "total_time_s":  float(dur_s.sum()),
         }
     return out
+
+
+# ─────────────────────────────────────────────────────────────────
+#  Per-animal-first duration aggregation
+# ─────────────────────────────────────────────────────────────────
+
+
+def per_animal_pm_duration_stats(
+    streams: dict[int, "BoutStream"],
+    fps: float,
+) -> pd.DataFrame:
+    """Per-(animal, PM) bout-duration summary.
+
+    The animal is the unit of observation here.  This function emits one
+    row per non-empty (``deer_id``, ``pm``) cell; callers feed the result
+    to :func:`aggregate_durations_across_animals` to get cohort-level
+    summaries without pseudo-replicating across the millions of pooled
+    bouts.
+
+    Args:
+        streams: ``deer_id → BoutStream`` mapping (typically the output of
+                 :func:`per_animal_bout_streams`).
+        fps:     Sample rate in Hz so durations come out in seconds.
+
+    Returns:
+        DataFrame with columns ``deer_id``, ``pm``, ``n_bouts``,
+        ``mean_s``, ``median_s``, ``q25_s``, ``q75_s``.
+    """
+    rows: list[dict[str, float | int]] = []
+    for deer_id, stream in streams.items():
+        for pm in np.unique(stream.labels):
+            mask = stream.labels == pm
+            dur_s = stream.lengths[mask] / fps
+            if dur_s.size == 0:
+                continue
+            rows.append({
+                "deer_id":  int(deer_id),
+                "pm":       int(pm),
+                "n_bouts":  int(dur_s.size),
+                "mean_s":   float(np.mean(dur_s)),
+                "median_s": float(np.median(dur_s)),
+                "q25_s":    float(np.quantile(dur_s, 0.25)),
+                "q75_s":    float(np.quantile(dur_s, 0.75)),
+            })
+    return pd.DataFrame(rows)
+
+
+def aggregate_durations_across_animals(
+    per_animal: pd.DataFrame,
+) -> pd.DataFrame:
+    """Cohort-level summary of per-(animal, PM) duration values.
+
+    Two complementary aggregations per PM:
+
+    - mean-of-means + SEM (matches the manuscript's existing duration
+      style; SEM is across animals, *n = n_animals*, not across bouts).
+    - median-of-medians + IQR (robust to the heavy right-skew of bout
+      durations; IQR is taken across the per-animal medians).
+
+    Args:
+        per_animal: Output of :func:`per_animal_pm_duration_stats`.
+
+    Returns:
+        DataFrame with columns ``pm``, ``n_animals``,
+        ``mean_of_means_s``, ``sem_s``, ``median_of_medians_s``,
+        ``q25_of_medians_s``, ``q75_of_medians_s``,
+        ``total_bouts``.
+    """
+    if per_animal.empty:
+        return pd.DataFrame(
+            columns=[
+                "pm", "n_animals",
+                "mean_of_means_s", "sem_s",
+                "median_of_medians_s",
+                "q25_of_medians_s", "q75_of_medians_s",
+                "total_bouts",
+            ],
+        )
+    rows: list[dict[str, float | int]] = []
+    for pm, sub in per_animal.groupby("pm"):
+        means = sub["mean_s"].to_numpy()
+        medians = sub["median_s"].to_numpy()
+        n_animals = int(means.size)
+        # ddof=1 → sample standard deviation; SEM uses n_animals.
+        sem = float(np.std(means, ddof=1) / np.sqrt(n_animals)) if n_animals > 1 else float("nan")
+        rows.append({
+            "pm":                    int(pm),
+            "n_animals":             n_animals,
+            "mean_of_means_s":       float(np.mean(means)),
+            "sem_s":                 sem,
+            "median_of_medians_s":   float(np.median(medians)),
+            "q25_of_medians_s":      float(np.quantile(medians, 0.25)),
+            "q75_of_medians_s":      float(np.quantile(medians, 0.75)),
+            "total_bouts":           int(sub["n_bouts"].sum()),
+        })
+    return pd.DataFrame(rows).sort_values("pm").reset_index(drop=True)
