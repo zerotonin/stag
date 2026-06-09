@@ -5,7 +5,7 @@
 [![Tests](https://github.com/zerotonin/stag/actions/workflows/tests.yml/badge.svg)](https://github.com/zerotonin/stag/actions/workflows/tests.yml)
 [![Documentation](https://github.com/zerotonin/stag/actions/workflows/docs.yml/badge.svg)](https://zerotonin.github.io/stag/)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19106434.svg)](https://doi.org/10.5281/zenodo.19106434)
+[![DOI](https://zenodo.org/badge/1245112641.svg)](https://doi.org/10.5281/zenodo.20371426)
 
 An unsupervised machine-learning pipeline for classifying farmed red deer
 (*Cervus elaphus*) behaviour from wearable tri-axial accelerometer data.
