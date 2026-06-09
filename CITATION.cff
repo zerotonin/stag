@@ -7,8 +7,8 @@ message: >-
 type: software
 license: MIT
 repository-code: "https://github.com/zerotonin/stag"
-url: "https://doi.org/10.5281/zenodo.19106434"
-doi: "10.5281/zenodo.19106434"
+url: "https://doi.org/10.5281/zenodo.20371426"
+doi: "10.5281/zenodo.20371426"
 version: "0.2.0"
 date-released: "2026-05-11"
 
