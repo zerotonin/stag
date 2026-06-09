@@ -10,14 +10,26 @@
 # partitions have free slots — the same opportunistic pattern Alex's
 # original headshake_project clustering used.
 #
-# Partition list spans every GPU the lab account can submit to with
-# the default normal,ondemand QOS (AllowQos=ALL on each).  H200 is
-# excluded because its h200_* QOS whitelist denies us.  SLURM
-# resolves the comma-separated list to whichever pool has free
+# Partition list spans every GPU pool the lab account can submit to
+# with normal / ondemand QOS, minus two carve-outs:
+#
+#   - aoraki_gpu_H200: gated by an h200_* QOS whitelist we don't hold.
+#   - aoraki_gpu_L4_24GB: sharded across concurrent jobs; cuML's rmm
+#     allocator OOMs even at k = 2 when another tenant is using the
+#     same GPU.  Every one of the 29 first-batch failures was a
+#     std::bad_alloc on aoraki29; dropped here too.
+#
+# SLURM resolves the comma-separated list to whichever pool has free
 # resources first.
+#
+# The submitter (slurm/submit_stability_null.sh) overrides this list
+# per task via --partition=...: for k > 25 it additionally drops
+# aoraki_gpu_RTX6000 and aoraki_gpu_RTX3090 because high k pushes
+# those nodes into the 02:30:00 walltime cliff.  The directive below
+# is the fallback for direct sbatch invocations.
 
 #SBATCH --account=geuba03p
-#SBATCH --partition=aoraki_gpu_H100,aoraki_gpu_A100_80GB,aoraki_gpu_A100_40GB,aoraki_gpu_RTX6000,aoraki_gpu_L40,aoraki_gpu_L4_24GB,aoraki_gpu_RTX3090
+#SBATCH --partition=aoraki_gpu_H100,aoraki_gpu_A100_80GB,aoraki_gpu_A100_40GB,aoraki_gpu_RTX6000,aoraki_gpu_L40,aoraki_gpu_RTX3090
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --gpus-per-task=1
