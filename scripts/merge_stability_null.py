@@ -75,25 +75,47 @@ def main() -> None:
 
     finite = df.dropna(subset=["instability_null"])
 
+    # Per-(seed, k): median all metrics across the 20 k-means fits per
+    # surrogate draw.  CH / silhouette / inertia rows are NaN-free in
+    # the per-task CSV (computed on every fit including the reference);
+    # instability carries NaN for the reference fit so the median
+    # naturally skips it.
+    available_per_fit: list[tuple[str, str]] = [
+        ("instability_null", "instability_null"),
+        ("ch",               "ch_null"),
+    ]
+    if "silhouette" in finite.columns:
+        available_per_fit.append(("silhouette", "silhouette_null"))
+    if "inertia" in finite.columns:
+        available_per_fit.append(("inertia", "inertia_null"))
+
+    agg_kwargs = {out_col: (in_col, "median") for in_col, out_col in available_per_fit}
     per_seed = (
-        finite.groupby(["surrogate_seed", "k"])["instability_null"]
-              .median()
+        finite.groupby(["surrogate_seed", "k"])
+              .agg(**agg_kwargs)
               .reset_index()
     )
     args.per_seed_csv.parent.mkdir(parents=True, exist_ok=True)
     per_seed.to_csv(args.per_seed_csv, index=False)
     print(f"Wrote per-seed table: {args.per_seed_csv}")
 
-    band = (
-        per_seed.groupby("k")["instability_null"]
-                .agg(
-                    instability_null="median",
-                    instability_null_low=lambda s: float(np.quantile(s, 0.25)),
-                    instability_null_high=lambda s: float(np.quantile(s, 0.75)),
-                )
-                .reset_index()
-                .sort_values("k")
-    )
+    # Cross-seed band: median + IQR per metric.
+    def _band_for(col: str, out_prefix: str) -> pd.DataFrame:
+        return (
+            per_seed.groupby("k")[col]
+                    .agg(**{
+                        out_prefix:           "median",
+                        f"{out_prefix}_low":  lambda s: float(np.quantile(s, 0.25)),
+                        f"{out_prefix}_high": lambda s: float(np.quantile(s, 0.75)),
+                    })
+                    .reset_index()
+        )
+
+    out_cols = [out for _, out in available_per_fit]
+    band = _band_for(out_cols[0], out_cols[0])
+    for out in out_cols[1:]:
+        band = band.merge(_band_for(out, out), on="k", how="outer")
+    band = band.sort_values("k")
 
     args.output_csv.parent.mkdir(parents=True, exist_ok=True)
     band.to_csv(args.output_csv, index=False)
