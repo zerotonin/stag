@@ -128,14 +128,29 @@ def compute_inertias(df: pd.DataFrame, X_sub: np.ndarray, n_full: int) -> pd.Ser
 #  Hungarian-matched centroid drift (instability) per (k, delSize)
 # ─────────────────────────────────────────────────────────────────
 
-def compute_instability(df: pd.DataFrame) -> pd.Series:
+def compute_instability(
+    df: pd.DataFrame,
+    unscale: np.ndarray | None = None,
+) -> pd.Series:
     """Per-fit Hungarian-matched centroid drift vs the basin median.
 
     Within each (delSize, k) group, treat one fit as the reference
     (highest CH) and compute, for every other fit, the Hungarian-
     matched mean centroid displacement.  Returns one value per fit
     (NaN for the reference).
+
+    Args:
+        df:      Per-fit DataFrame with ``centroids_inline`` and ``ch``
+                 columns (see :func:`collect_fits`).
+        unscale: Optional per-column multiplier of shape ``(d,)`` applied
+                 to every centroid before the distance calc — e.g. the
+                 MaxAbs divisors so the output lands in g-force units.
+                 ``None`` keeps the MaxAbs convention.
     """
+    scale = (
+        None if unscale is None
+        else np.asarray(unscale, dtype=np.float32).reshape(1, -1)
+    )
     inst = np.full(len(df), np.nan)
     for (ds, k), grp in df.groupby(["delSize", "k"]):
         if len(grp) < 2:
@@ -143,10 +158,14 @@ def compute_instability(df: pd.DataFrame) -> pd.Series:
         # Take the highest-CH fit as the basin reference.
         ref_idx = grp["ch"].idxmax()
         ref_c = np.asarray(grp.loc[ref_idx, "centroids_inline"], dtype=np.float32)
+        if scale is not None:
+            ref_c = ref_c * scale
         for i, row in grp.iterrows():
             if i == ref_idx:
                 continue
             other_c = np.asarray(row["centroids_inline"], dtype=np.float32)
+            if scale is not None:
+                other_c = other_c * scale
             # Hungarian on pairwise centroid distances.
             D = np.linalg.norm(
                 ref_c[:, None, :] - other_c[None, :, :], axis=2,
