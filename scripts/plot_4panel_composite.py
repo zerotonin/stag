@@ -38,7 +38,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from kneed import KneeLocator
-from matplotlib.ticker import NullFormatter, ScalarFormatter
 
 from stag.constants import (
     MAXABS_SCALER_CSV,
@@ -47,7 +46,6 @@ from stag.constants import (
     apply_figure_defaults,
     save_figure,
 )
-
 
 DELSIZE_PALETTE: dict[int, str] = {
     0:  "#EECCC9",

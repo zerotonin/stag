@@ -43,7 +43,6 @@ from stag.constants import (
     save_figure,
 )
 
-
 # Sequential pink → deep purple palette, lab canonical for the
 # leave-out-reduction overlays (matches the silhouette + elbow figure).
 DELSIZE_PALETTE: dict[int, str] = {

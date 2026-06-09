@@ -28,7 +28,6 @@ import argparse
 from pathlib import Path
 
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 from kneed import KneeLocator
 
@@ -38,7 +37,6 @@ from stag.constants import (
     apply_figure_defaults,
     save_figure,
 )
-
 
 DELSIZE_PALETTE: dict[int, str] = {
     0:  "#EECCC9",

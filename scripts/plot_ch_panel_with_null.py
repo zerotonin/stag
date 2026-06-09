@@ -43,7 +43,6 @@ from stag.constants import (
     save_figure,
 )
 
-
 DELSIZE_PALETTE: dict[int, str] = {
     0:  "#EECCC9",
     10: "#DB97AA",
