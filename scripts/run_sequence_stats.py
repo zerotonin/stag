@@ -102,7 +102,10 @@ def _ear_flick_pms() -> list[int]:
 
 
 def _activity_pms() -> list[int]:
-    return [pm for pm in PM_CATEGORY if pm not in (0,)]  # PM0 = quiescent excluded
+    # PM 0 = Quiescent, PM 1 = Resting; both are excluded so the
+    # denominator is "non-resting" (everything the animal does while not
+    # lying down).  Matches the manuscript composite figure's caption.
+    return [pm for pm in PM_CATEGORY if pm not in (0, 1)]
 
 
 def main() -> None:
